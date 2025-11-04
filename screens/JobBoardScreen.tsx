@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Job } from '../types';
+import { Job, Screen } from '../types';
 import { 
     SearchIcon, MapPinIcon, BriefcaseIcon, CurrencyDollarIcon, 
     RocketIcon, GlobeAltIcon, BeakerIcon 
@@ -7,6 +8,7 @@ import {
 
 interface JobBoardScreenProps {
     jobs: Job[];
+    setCurrentScreen: (screen: Screen) => void;
 }
 
 // Updated categories list for multi-select. "All" is now handled by an empty selection.
@@ -50,7 +52,7 @@ const ValueCard: React.FC<{ icon: React.ElementType; title: string; description:
     </div>
 );
 
-const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs }) => {
+const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen }) => {
     // State now holds an array of selected categories for multi-select
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -153,7 +155,9 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs }) => {
             <section className="text-center bg-white p-12 rounded-2xl shadow-lg border border-gray-200">
                  <h2 className="text-3xl font-bold text-sunai-dark">Are you hiring AI talent?</h2>
                  <p className="text-lg text-gray-600 mt-2 mb-6">Post your openings and reach hundreds of startup founders and engineers using Sun AI.</p>
-                 <button className="bg-sunai-orange text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transition-all">
+                 <button 
+                    onClick={() => setCurrentScreen(Screen.PostAJob)}
+                    className="bg-sunai-orange text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transition-all">
                      Add Job Posting
                  </button>
                  <p className="text-sm text-gray-500 mt-3">Free for verified startups — launch your first listing today.</p>

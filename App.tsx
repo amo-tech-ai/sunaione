@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 // Fix: Added Job, UserProfile, and Article import
 import { Screen, DeckData, Deck, Slide, TemplateID, Event, Perk, Job, UserProfile, Article } from './types';
@@ -16,6 +17,7 @@ import PerksScreen from './screens/PerksScreen';
 import PresentationScreen from './screens/PresentationScreen';
 import PerkDetailScreen from './screens/PerkDetailScreen';
 import JobBoardScreen from './screens/JobBoardScreen';
+import PostAJobScreen from './screens/PostAJobScreen';
 import Footer from './components/Footer';
 import BlogScreen from './screens/BlogScreen';
 
@@ -258,6 +260,8 @@ const App: React.FC = () => {
         return <HomePage setCurrentScreen={setCurrentScreen} events={events} perks={perksData} />;
       case Screen.Blog:
         return <BlogScreen articles={articlesData} setCurrentScreen={setCurrentScreen} />;
+      case Screen.PostAJob:
+        return <PostAJobScreen setCurrentScreen={setCurrentScreen} />;
       case Screen.Welcome:
       case Screen.Problem:
       case Screen.Market:
@@ -281,7 +285,7 @@ const App: React.FC = () => {
                 {currentScreen === Screen.EventDetail && activeEventId && <EventDetailScreen eventId={activeEventId} setCurrentScreen={setCurrentScreen} events={events} onRegisterToggle={handleRegisterToggle} />}
                 {currentScreen === Screen.Perks && <PerksScreen perks={perksData} onViewDetails={handleViewPerkDetails} />}
                 {currentScreen === Screen.PerkDetail && activePerkId && <PerkDetailScreen perkId={activePerkId} allPerks={perksData} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewPerkDetails} />}
-                {currentScreen === Screen.JobBoard && <JobBoardScreen jobs={jobsData} />}
+                {currentScreen === Screen.JobBoard && <JobBoardScreen jobs={jobsData} setCurrentScreen={setCurrentScreen} />}
                 {currentScreen === Screen.MyEvents && <MyEventsScreen events={events} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewEventDetails} />}
                  {/* FIX: Removed unreachable BlogScreen render. It's handled as a standalone page above. */}
             </DashboardLayout>

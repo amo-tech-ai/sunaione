@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Screen, Event, Perk } from '../types';
 import { ArrowRightIcon, SparklesIcon, ChatBubbleLeftRightIcon, SunIcon, CalendarIcon, MapPinIcon } from '../components/Icons';
@@ -28,10 +29,10 @@ export const PublicHeader: React.FC<{ onNavigate: (screen: Screen) => void }> = 
               Login
             </button>
             <button
-              onClick={() => onNavigate(Screen.Welcome)}
+              onClick={() => onNavigate(Screen.PostAJob)}
               className="bg-sunai-dark text-white font-semibold py-2 px-4 rounded-lg hover:bg-black transition-colors"
             >
-              Get Started
+              Post a Job
             </button>
         </div>
     </header>

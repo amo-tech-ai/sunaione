@@ -1,3 +1,4 @@
+
 // Fix: Replaced incorrect component code with actual type definitions.
 export enum Screen {
   Home = 'Home',
@@ -17,6 +18,7 @@ export enum Screen {
   Perks = 'Perks',
   PerkDetail = 'PerkDetail',
   JobBoard = 'JobBoard',
+  PostAJob = 'PostAJob',
   Blog = 'Blog',
 }
 
