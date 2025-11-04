@@ -2,14 +2,9 @@
 import React from 'react';
 import { Screen } from '../types';
 import { 
-    UserCircleIcon, SparklesIcon, CalendarIcon, 
-    // Fix: Added BriefcaseIcon and new TagIcon import
-    BriefcaseIcon, TagIcon, ChatBubbleLeftRightIcon
+    DocumentDuplicateIcon, ChartBarIcon, SunIcon, UserCircleIcon, CalendarIcon, 
+    TagIcon, BriefcaseIcon, CogIcon 
 } from '../components/Icons';
-import Footer from '../components/Footer';
-
-// Placeholder for real icons
-const DeckIcon = SparklesIcon; 
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,55 +13,57 @@ interface DashboardLayoutProps {
 }
 
 const NavItem: React.FC<{
-    icon: React.ElementType;
-    label: string;
-    screen: Screen;
-    currentScreen: Screen;
-    setCurrentScreen: (screen: Screen) => void;
-}> = ({ icon: Icon, label, screen, currentScreen, setCurrentScreen }) => {
-    const isActive = currentScreen === screen;
-    return (
-        <button
-            onClick={() => setCurrentScreen(screen)}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                isActive
-                    ? 'bg-sunai-orange/10 text-sunai-orange'
-                    : 'text-gray-600 hover:bg-gray-100'
-            }`}
-        >
-            <Icon className="w-5 h-5" />
-            <span>{label}</span>
-        </button>
-    );
+  screen: Screen;
+  currentScreen: Screen;
+  setCurrentScreen: (screen: Screen) => void;
+  icon: React.ElementType;
+  label: string;
+}> = ({ screen, currentScreen, setCurrentScreen, icon: Icon, label }) => {
+  const isActive = currentScreen === screen;
+  return (
+    <button
+      onClick={() => setCurrentScreen(screen)}
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+        isActive
+          ? 'bg-sunai-orange/10 text-sunai-orange'
+          : 'text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <Icon className="w-5 h-5" />
+      {label}
+    </button>
+  );
 };
-
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, currentScreen, setCurrentScreen }) => {
   return (
-    <div className="flex h-screen bg-sunai-beige">
-      <aside className="w-64 bg-white p-4 border-r border-gray-200 flex flex-col">
-        <div className="font-bold text-2xl text-sunai-dark px-2 py-4">Sun AI</div>
-        <nav className="flex-1 space-y-2 mt-8">
-            <NavItem icon={DeckIcon} label="My Decks" screen={Screen.Dashboard} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
-            <NavItem icon={UserCircleIcon} label="My Profile" screen={Screen.Profile} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
-            <NavItem icon={CalendarIcon} label="Events" screen={Screen.Events} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
-            <NavItem icon={TagIcon} label="Perks" screen={Screen.Perks} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
-            <NavItem icon={BriefcaseIcon} label="Jobs" screen={Screen.JobBoard} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
-            <NavItem icon={ChatBubbleLeftRightIcon} label="Blog" screen={Screen.Blog} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+    <div className="min-h-screen flex bg-sunai-beige">
+      <aside className="w-64 bg-white p-4 border-r border-gray-200 flex-col hidden lg:flex">
+        <div className="flex items-center gap-2 px-3 mb-6">
+            <div className="bg-sunai-dark p-2 rounded-lg">
+                <SunIcon className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="font-bold text-xl text-sunai-dark">Sun AI</h1>
+        </div>
+        <nav className="flex-grow space-y-1.5">
+          <NavItem screen={Screen.Dashboard} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} icon={ChartBarIcon} label="Dashboard" />
+          <NavItem screen={Screen.Profile} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} icon={UserCircleIcon} label="Profile" />
+          <NavItem screen={Screen.MyEvents} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} icon={CalendarIcon} label="My Events" />
+          <NavItem screen={Screen.Perks} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} icon={TagIcon} label="Perks" />
+          <NavItem screen={Screen.JobBoard} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} icon={BriefcaseIcon} label="Job Board" />
         </nav>
         <div className="mt-auto">
-            <div className="p-4 bg-gray-50 rounded-lg text-center">
-                <h4 className="font-bold text-sm">Upgrade to Pro</h4>
-                <p className="text-xs text-gray-500 mt-1">Unlock advanced AI features and analytics.</p>
-                <button className="mt-3 w-full bg-sunai-dark text-white text-xs font-bold py-2 rounded-md hover:bg-black">Upgrade</button>
-            </div>
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100">
+                <CogIcon className="w-5 h-5" /> Settings
+            </button>
+             <button onClick={() => setCurrentScreen(Screen.Home)} className="mt-2 w-full text-sm text-gray-500 hover:text-sunai-orange">
+                Exit to Homepage
+             </button>
         </div>
       </aside>
-      <main className="flex-1 flex flex-col overflow-y-auto">
-        <div className="flex-grow p-8">
-            {children}
-        </div>
-        <Footer onNavigate={setCurrentScreen} />
+
+      <main className="flex-1 p-6 md:p-8 lg:p-10 overflow-y-auto">
+        {children}
       </main>
     </div>
   );

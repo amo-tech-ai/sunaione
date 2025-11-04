@@ -1,4 +1,3 @@
-
 // Fix: Replaced incorrect component code with actual type definitions.
 export enum Screen {
   Home = 'Home',
@@ -20,6 +19,8 @@ export enum Screen {
   JobBoard = 'JobBoard',
   PostAJob = 'PostAJob',
   Blog = 'Blog',
+  Apply = 'Apply',
+  ApplySuccess = 'ApplySuccess',
 }
 
 export interface Slide {
@@ -93,6 +94,21 @@ export interface Job {
     isRemote: boolean;
     tags: string[];
     category: string;
+}
+
+export interface JobApplication {
+    fullName: string;
+    email: string;
+    resume: {
+        name: string;
+        size: number;
+    } | null;
+    coverLetter: string;
+    yearsOfExperience: string;
+    portfolioUrl: string;
+    skills: string[];
+    locationPreference: 'Onsite' | 'Remote' | 'Hybrid';
+    salaryExpectation: string;
 }
 
 export interface Article {

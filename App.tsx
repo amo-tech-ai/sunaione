@@ -1,303 +1,161 @@
 
 import React, { useState, useEffect } from 'react';
-// Fix: Added Job, UserProfile, and Article import
-import { Screen, DeckData, Deck, Slide, TemplateID, Event, Perk, Job, UserProfile, Article } from './types';
+import { Screen, DeckData, Deck, Event, Perk, Job, Article } from './types';
+import { generateDeck } from './services/geminiService';
+
 import WizardSteps from './screens/WizardSteps';
 import GeneratingScreen from './screens/GeneratingScreen';
 import DeckEditor from './screens/DeckEditor';
 import Dashboard from './screens/Dashboard';
-import { generateDeck } from './services/geminiService';
+import PresentationScreen from './screens/PresentationScreen';
 import HomePage from './screens/HomePage';
 import DashboardLayout from './screens/DashboardLayout';
 import ProfileScreen from './screens/ProfileScreen';
-import EventsScreen from './screens/EventsScreen';
-import EventDetailScreen from './screens/EventDetailScreen';
 import MyEventsScreen from './screens/MyEventsScreen';
 import PerksScreen from './screens/PerksScreen';
-import PresentationScreen from './screens/PresentationScreen';
+import EventsScreen from './screens/EventsScreen';
+import EventDetailScreen from './screens/EventDetailScreen';
 import PerkDetailScreen from './screens/PerkDetailScreen';
 import JobBoardScreen from './screens/JobBoardScreen';
 import PostAJobScreen from './screens/PostAJobScreen';
-import Footer from './components/Footer';
 import BlogScreen from './screens/BlogScreen';
+import ApplyScreen from './screens/ApplyScreen';
+import ApplySuccessScreen from './screens/ApplySuccessScreen';
 
 
-const initialEventsData: Event[] = [
-  {
-    id: '1',
-    title: 'Seed Stage Startup Pitch Night',
-    description: 'An exclusive event for seed-stage startups to pitch in front of leading venture capitalists and angel investors. Get feedback, make connections, and find your next funding round.',
-    image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1632&q=80',
-    date: 'December 15, 2023',
-    time: '6:00 PM - 9:00 PM PST',
-    location: 'Silicon Valley, CA',
-    registeredCount: 85,
-    totalSpots: 100,
-    category: 'Networking',
-    status: 'Upcoming',
-    registered: true,
-  },
-  {
-    id: '2',
-    title: 'AI in SaaS: The Next Frontier',
-    description: 'Join industry leaders and innovators to discuss the impact of AI on the SaaS landscape. Explore new business models, product strategies, and the future of intelligent software.',
-    image: 'https://images.unsplash.com/photo-1620712943543-2858200f745a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: 'November 28, 2023',
-    time: '9:00 AM - 4:00 PM PST',
-    location: 'Virtual Event',
-    isVirtual: true,
-    registeredCount: 450,
-    totalSpots: 500,
-    category: 'Conference',
-    status: 'Past',
-    registered: true,
-  },
-  {
-    id: '3',
-    title: 'Growth Hacking Workshop for Startups',
-    description: 'A hands-on workshop designed to teach you the most effective growth hacking strategies for 2023. Learn from experts who have scaled companies from zero to millions.',
-    image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: 'January 10, 2024',
-    time: '10:00 AM - 1:00 PM PST',
-    location: 'New York, NY',
-    registeredCount: 30,
-    totalSpots: 50,
-    category: 'Workshop',
-    status: 'Upcoming',
-    registered: false,
-  },
-  {
-    id: '4',
-    title: 'Web3 & Decentralization Summit',
-    description: 'Explore the future of the internet with pioneers in blockchain, DeFi, and NFTs. This summit brings together the brightest minds to discuss the challenges and opportunities of a decentralized world.',
-    image: 'https://images.unsplash.com/photo-1642104704074-af0f48723549?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1472&q=80',
-    date: 'February 5, 2024',
-    time: 'All Day',
-    location: 'Miami, FL',
-    registeredCount: 120,
-    totalSpots: 200,
-    category: 'Conference',
-    status: 'Upcoming',
-    registered: false,
-  },
-];
-
-const perksData: Perk[] = [
-    { id: '1', partner: 'AWS Activate', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg', description: 'Get up to $5,000 in AWS Activate credits to build and scale your startup on the world\'s most comprehensive and broadly adopted cloud platform.', offer: '$5,000 Credits', category: 'Cloud', users: 1250, rating: 4.9, tag: 'Featured' },
-    { id: '2', partner: 'Stripe', logo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg', description: 'Process your first $50,000 in payments completely fee-free. Stripe provides a suite of APIs that powers commerce for businesses of all sizes.', offer: '$50k Fee-Free', category: 'Payments', users: 2100, rating: 4.8, tag: 'Popular' },
-    { id: '3', partner: 'HubSpot for Startups', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/15/HubSpot_Logo.svg', description: 'Receive up to 90% off HubSpot\'s marketing, sales, and service software in your first year, 50% off in your second, and 25% off ongoing.', offer: '90% Off', category: 'CRM', users: 980, rating: 4.7 },
-    { id: '4', partner: 'Clerk', logo: 'https://clerk.com/_next/image?url=%2Fdocs%2Fclerk-logomark-light.png&w=64&q=75', description: 'The easiest way to add authentication and user management to your application. Get 1 year free on the Pro plan.', offer: '1 Year Free', category: 'Dev Tools', users: 850, rating: 4.9, tag: 'New' },
-    { id: '5', partner: 'Notion', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg', description: 'The all-in-one workspace for your notes, tasks, wikis, and databases. Get $1,000 in credit for your team.', offer: '$1,000 Credit', category: 'Productivity', users: 3200, rating: 4.8 },
-    { id: '6', partner: 'Google Cloud for Startups', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg', description: 'Build your startup on Google Cloud and get up to $100,000 in cloud credits for your first year, plus access to technical training and business support.', offer: '$100k Credits', category: 'Cloud', users: 760, rating: 4.9 },
-];
-
-const jobsData: Job[] = [
-    { id: '1', title: 'Senior AI Engineer', companyName: 'Innovate AI', companyLogo: 'https://clerk.com/_next/image?url=%2Fdocs%2Fclerk-logomark-light.png&w=64&q=75', location: 'Remote', type: 'Full-time', salary: '150k - 190k', isRemote: true, tags: ['Python', 'PyTorch', 'LLMs'], category: 'Engineering' },
-    { id: '2', title: 'Product Manager, Generative AI', companyName: 'Creative Solutions', companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg', location: 'San Francisco, CA', type: 'Full-time', salary: '160k - 200k', isRemote: false, tags: ['Product Strategy', 'AI/ML', 'SaaS'], category: 'Product' },
-    { id: '3', title: 'UX/UI Designer for AI Tools', companyName: 'Sun AI', companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/1/15/HubSpot_Logo.svg', location: 'Remote (US)', type: 'Full-time', salary: '120k - 150k', isRemote: true, tags: ['Figma', 'User Research', 'Design Systems'], category: 'Design' },
-    { id: '4', title: 'Marketing Lead, AI Platforms', companyName: 'Growth Rocket', companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg', location: 'New York, NY', type: 'Full-time', salary: '140k - 170k', isRemote: false, tags: ['Go-to-Market', 'Demand Gen', 'SaaS'], category: 'Marketing' },
-];
-
-const articlesData: Article[] = [
-    {
-        id: '1',
-        title: 'The Future of Founders in the AI Era',
-        excerpt: 'Discover how AI is changing how startups scale, pitch, and innovate, paving the way for a new generation of entrepreneurs.',
-        imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop',
-        category: 'Founder Stories',
-        author: { name: 'Sun AI Team', avatarUrl: 'https://i.pravatar.cc/150?u=sunai' },
-        date: 'Sep 21, 2025',
-        isFeatured: true,
-    },
-    {
-        id: '2',
-        title: '10 Tips for Building AI Products Users Love',
-        excerpt: 'Essential lessons for founders building AI-powered tools that solve real problems and create delightful user experiences.',
-        imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
-        category: 'Tutorials',
-        author: { name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=janedoe' },
-        date: 'Sep 18, 2025',
-    },
-    {
-        id: '3',
-        title: 'AI Summit Recap: 5 Key Takeaways for Founders',
-        excerpt: 'We attended the largest AI summit of the year. Here are the most important trends and insights for startup builders.',
-        imageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2070&auto=format&fit=crop',
-        category: 'Events',
-        author: { name: 'Sun AI Team', avatarUrl: 'https://i.pravatar.cc/150?u=sunai' },
-        date: 'Sep 15, 2025',
-    },
-    {
-        id: '4',
-        title: 'Upcoming Article — AI in Latin America',
-        excerpt: 'Exploring the booming AI ecosystem in Latin America, from emerging startups to established tech hubs.',
-        imageUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2070&auto=format&fit=crop',
-        category: 'AI News',
-        author: { name: 'Community', avatarUrl: 'https://i.pravatar.cc/150?u=community' },
-        date: 'Coming Soon',
-        isPlaceholder: true,
-    },
-    {
-        id: '5',
-        title: 'How to Build with the Gemini API',
-        excerpt: 'A step-by-step guide to integrating Google\'s powerful Gemini model into your applications.',
-        imageUrl: 'https://images.unsplash.com/photo-1614741118884-62ac62b31260?q=80&w=1964&auto=format&fit=crop',
-        category: 'Tutorials',
-        author: { name: 'Sun AI Team', avatarUrl: 'https://i.pravatar.cc/150?u=sunai' },
-        date: 'Coming Soon',
-        isPlaceholder: true,
-    },
-    {
-        id: '6',
-        title: 'Guest Post — Investor Insights Coming Soon',
-        excerpt: 'A guest post from a leading VC firm on the key metrics and qualities they seek in early-stage AI companies.',
-        imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop',
-        category: 'Startup Lessons',
-        author: { name: 'Guest Contributor', avatarUrl: 'https://i.pravatar.cc/150?u=guest' },
-        date: 'Coming Soon',
-        isPlaceholder: true,
-    },
-];
+const initialDeckData: DeckData = {
+  companyName: '', problem: '', solution: '', targetAudience: '',
+  businessModel: '', traction: '', teamMembers: '', fundingAmount: '',
+  useOfFunds: '', template: 'startup',
+};
 
 const App: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.Home);
-  const [deckData, setDeckData] = useState<DeckData>({
-    problem: '',
-    solution: '',
-    businessModel: '',
-    targetAudience: '',
-    traction: '',
-    teamMembers: '',
-    fundingAmount: '',
-    useOfFunds: '',
-    companyName: '',
-    template: 'startup' as TemplateID,
-  });
+    const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.Home);
+    const [deckData, setDeckData] = useState<DeckData>(initialDeckData);
+    const [decks, setDecks] = useState<Deck[]>([]);
+    const [activeDeckId, setActiveDeckId] = useState<string | null>(null);
 
-  const [decks, setDecks] = useState<Deck[]>(() => {
-    const savedDecks = localStorage.getItem('decks');
-    return savedDecks ? JSON.parse(savedDecks) : [];
-  });
-  const [activeDeck, setActiveDeck] = useState<Deck | null>(null);
-  const [activeEventId, setActiveEventId] = useState<string | null>(null);
-  const [activePerkId, setActivePerkId] = useState<string | null>(null);
-  const [events, setEvents] = useState<Event[]>(initialEventsData);
+    const [events, setEvents] = useState<Event[]>([]);
+    const [perks, setPerks] = useState<Perk[]>([]);
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const [articles, setArticles] = useState<Article[]>([]);
+    
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+    const [selectedPerkId, setSelectedPerkId] = useState<string | null>(null);
+    const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
+    useEffect(() => {
+        const mockDecks: Deck[] = [
+            { id: 'deck1', name: 'Innovate AI Pitch', lastEdited: Date.now() - 86400000, template: 'startup', slides: [{title: 'Title', content: ['Innovate AI: The Future of Automation']}, {title: 'Problem', content: ['Manual data entry is slow and error-prone']}] },
+            { id: 'deck2', name: 'HealthTech Solution', lastEdited: Date.now() - 2 * 86400000, template: 'corporate', slides: [{title: 'Welcome', content: ['Revolutionizing Patient Care']}] },
+        ];
+        setDecks(mockDecks);
 
-  useEffect(() => {
-    localStorage.setItem('decks', JSON.stringify(decks));
-  }, [decks]);
+        const mockEventsData: Event[] = [
+            { id: 'e1', title: 'AI in FinTech Summit', description: 'Explore the latest trends in AI and finance, network with industry leaders, and discover innovative solutions that are reshaping the financial landscape. This summit features keynote speakers, panel discussions, and hands-on workshops.', image: 'https://source.unsplash.com/random/800x600?fintech', date: 'Oct 28, 2024', time: '10:00 AM', location: 'New York, NY', registeredCount: 150, totalSpots: 200, category: 'Conference', status: 'Upcoming', registered: true, isVirtual: false, agenda: [{time: '10 AM', topic: 'Keynote: AI-Powered Finance', speaker: 'Dr. Eva Core'}, {time: '11 AM', topic: 'Panel: The Future of Robo-Advisors'}] },
+            { id: 'e2', title: 'Founder Networking Night', description: 'An exclusive evening for startup founders, investors, and tech enthusiasts to connect in a relaxed atmosphere. Share ideas, build relationships, and find your next co-founder or investor.', image: 'https://source.unsplash.com/random/800x600?networking', date: 'Nov 05, 2024', time: '6:00 PM', location: 'San Francisco, CA', registeredCount: 45, totalSpots: 100, category: 'Networking', status: 'Upcoming', registered: false, speakers: [{name: 'Jane Doe', title: 'VC at Sun Ventures', image: 'https://i.pravatar.cc/150?u=jane'}] },
+            { id: 'e3', title: 'Pitch Perfect Workshop', description: 'Join our interactive workshop designed to help you craft and deliver a compelling startup pitch. Get expert feedback and learn the secrets to capturing investor attention.', image: 'https://source.unsplash.com/random/800x600?pitch', date: 'Sep 15, 2024', time: '2:00 PM', location: 'Virtual', registeredCount: 88, totalSpots: 100, category: 'Workshop', status: 'Past', registered: true, isVirtual: true },
+        ];
+        setEvents(mockEventsData);
 
-  const handleRegisterToggle = (eventId: string) => {
-    setEvents(prevEvents =>
-      prevEvents.map(event => {
-        if (event.id === eventId) {
-          const isRegistered = !event.registered;
-          const registeredCount = isRegistered
-            ? event.registeredCount + 1
-            : event.registeredCount - 1;
-          return { ...event, registered: isRegistered, registeredCount };
+        const mockPerksData: Perk[] = [
+            { id: 'p1', partner: 'AWS Activate', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg', description: 'Get the resources you need to get started with AWS. The Activate program provides startups with a host of benefits, including AWS credits, technical support, and training.', offer: '$5,000 Credits', category: 'Cloud', users: 120, rating: 4.8, tag: 'Featured' },
+            { id: 'p2', partner: 'Stripe', logo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg', description: 'Power payments for your startup with Stripe. Sun AI members get their first $50,000 of card transactions processed for free.', offer: '$50k Fee-Free', category: 'Finance', users: 250, rating: 4.9, tag: 'Popular' },
+            { id: 'p3', partner: 'HubSpot for Startups', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/1f/HubSpot_Logo.svg', description: 'Get access to HubSpot Growth Platform, a full suite of software for marketing, sales, and customer service, with a startup-friendly discount.', offer: '90% Discount', category: 'Marketing', users: 95, rating: 4.7, tag: 'New' },
+        ];
+        setPerks(mockPerksData);
+
+        const mockJobsData: Job[] = [
+             { id: 'j1', title: 'Senior AI Engineer', companyName: 'Innovate AI', companyLogo: 'https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/openai.svg', location: 'San Francisco, CA', type: 'Full-time', salary: '$150k - $180k', isRemote: false, tags: ['Python', 'PyTorch', 'NLP'], category: 'Engineering' },
+             { id: 'j2', title: 'Product Manager, AI Platforms', companyName: 'DataCorp', companyLogo: 'https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/googlecloud.svg', location: 'Remote', type: 'Full-time', salary: '$140k - $170k', isRemote: true, tags: ['Product Strategy', 'Roadmap', 'API'], category: 'Product' },
+        ];
+        setJobs(mockJobsData);
+
+        const mockArticlesData: Article[] = [
+            { id: 'a1', title: 'The Future of Generative AI in Startups', excerpt: 'Discover how generative AI is reshaping industries and creating new opportunities for entrepreneurs.', imageUrl: 'https://source.unsplash.com/random/800x600?ai', category: 'AI News', author: { name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=jane'}, date: 'Oct 20, 2024', isFeatured: true },
+            { id: 'a2', title: 'How We Raised Our First $1M Seed Round', excerpt: 'A step-by-step guide from a founder who just went through the fundraising trenches.', imageUrl: 'https://source.unsplash.com/random/800x600?money', category: 'Founder Stories', author: { name: 'John Smith', avatarUrl: 'https://i.pravatar.cc/150?u=john'}, date: 'Oct 15, 2024' },
+            { id: 'a3', title: 'Mastering the Art of the Pitch Deck', excerpt: 'Learn the key components of a compelling pitch deck that will grab investors attention.', imageUrl: 'https://source.unsplash.com/random/800x600?presentation', category: 'Tutorials', author: { name: 'Emily White', avatarUrl: 'https://i.pravatar.cc/150?u=emily'}, date: 'Oct 10, 2024', isPlaceholder: true },
+        ];
+        setArticles(mockArticlesData);
+    }, []);
+
+    const handleDeckGenerationFinish = async () => {
+        setCurrentScreen(Screen.Generating);
+        const newSlides = await generateDeck(deckData);
+        const newDeck: Deck = { id: String(Date.now()), name: `${deckData.companyName} Pitch Deck`, slides: newSlides, lastEdited: Date.now(), template: deckData.template };
+        setDecks(prev => [...prev, newDeck]);
+        setDeckData(initialDeckData);
+        setActiveDeckId(newDeck.id);
+        setCurrentScreen(Screen.DeckEditor);
+    };
+
+    const handleSelectDeck = (deckId: string) => {
+        setActiveDeckId(deckId);
+        setCurrentScreen(Screen.DeckEditor);
+    };
+    
+    const activeDeck = decks.find(d => d.id === activeDeckId) || null;
+    const setActiveDeck = (updatedDeck: Deck | null) => {
+        if (updatedDeck) {
+            setDecks(decks.map(d => d.id === updatedDeck.id ? updatedDeck : d));
         }
-        return event;
-      })
-    );
-  };
+    };
+    
+    const handleRegisterToggle = (eventId: string) => {
+        setEvents(events.map(e => e.id === eventId ? { ...e, registered: !e.registered, registeredCount: e.registered ? e.registeredCount - 1 : e.registeredCount + 1 } : e));
+    };
 
-  const handleDeckGeneration = async () => {
-    setCurrentScreen(Screen.Generating);
-    try {
-      const slides = await generateDeck(deckData);
-      const newDeck: Deck = {
-        id: `deck-${Date.now()}`,
-        name: `${deckData.companyName} Pitch Deck`,
-        slides,
-        lastEdited: Date.now(),
-        template: deckData.template,
-      };
-      setDecks(prev => [...prev, newDeck]);
-      setActiveDeck(newDeck);
-      setCurrentScreen(Screen.DeckEditor);
-    } catch (error) {
-      console.error("Failed to generate deck", error);
-      // Handle error, maybe show an error screen
-      setCurrentScreen(Screen.Problem); // Go back to wizard
-    }
-  };
+    const dashboardScreens = [ Screen.Dashboard, Screen.Profile, Screen.MyEvents, Screen.Perks, Screen.Events, Screen.EventDetail, Screen.PerkDetail, Screen.JobBoard, Screen.DeckEditor, Screen.Presentation, Screen.Apply, Screen.ApplySuccess ];
 
-  const handleSelectDeck = (deckId: string) => {
-    const deck = decks.find(d => d.id === deckId);
-    if (deck) {
-      setActiveDeck(deck);
-      setCurrentScreen(Screen.DeckEditor);
-    }
-  };
-
-  const handleViewEventDetails = (eventId: string) => {
-    setActiveEventId(eventId);
-    setCurrentScreen(Screen.EventDetail);
-  };
-  
-  const handleViewPerkDetails = (perkId: string) => {
-    setActivePerkId(perkId);
-    setCurrentScreen(Screen.PerkDetail);
-  };
-
-  const setActiveDeckFromEditor = (deck: Deck | null) => {
-    if(deck) {
-        const deckIndex = decks.findIndex(d => d.id === deck.id);
-        if(deckIndex > -1) {
-            const newDecks = [...decks];
-            newDecks[deckIndex] = deck;
-            setDecks(newDecks);
+    const renderScreen = () => {
+        switch (currentScreen) {
+            case Screen.Home: return <HomePage setCurrentScreen={setCurrentScreen} events={events} perks={perks} />;
+            case Screen.Welcome: case Screen.Problem: case Screen.Market: case Screen.Traction: case Screen.Ask:
+                return <WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleDeckGenerationFinish} />;
+            case Screen.Generating: return <GeneratingScreen />;
+            case Screen.Dashboard: return <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
+            case Screen.DeckEditor:
+                if (!activeDeck) return <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
+                return <DeckEditor deck={activeDeck} setDeck={setActiveDeck} setCurrentScreen={setCurrentScreen} />;
+            case Screen.Presentation:
+                if (!activeDeck) return <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
+                return <PresentationScreen deck={activeDeck} setCurrentScreen={setCurrentScreen} />;
+            case Screen.Profile: return <ProfileScreen />;
+            case Screen.Events: return <EventsScreen events={events} onRegisterToggle={handleRegisterToggle} onViewDetails={(id) => { setSelectedEventId(id); setCurrentScreen(Screen.EventDetail); }} />;
+            case Screen.EventDetail:
+                if (!selectedEventId) return <EventsScreen events={events} onRegisterToggle={handleRegisterToggle} onViewDetails={(id) => { setSelectedEventId(id); setCurrentScreen(Screen.EventDetail); }} />;
+                return <EventDetailScreen eventId={selectedEventId} events={events} onRegisterToggle={handleRegisterToggle} setCurrentScreen={setCurrentScreen} />;
+            case Screen.MyEvents: return <MyEventsScreen events={events} setCurrentScreen={setCurrentScreen} onViewDetails={(id) => { setSelectedEventId(id); setCurrentScreen(Screen.EventDetail); }} />;
+            case Screen.Perks: return <PerksScreen perks={perks} onViewDetails={(id) => { setSelectedPerkId(id); setCurrentScreen(Screen.PerkDetail); }} />;
+            case Screen.PerkDetail:
+                if (!selectedPerkId) return <PerksScreen perks={perks} onViewDetails={(id) => { setSelectedPerkId(id); setCurrentScreen(Screen.PerkDetail); }} />;
+                return <PerkDetailScreen perkId={selectedPerkId} allPerks={perks} setCurrentScreen={setCurrentScreen} onViewDetails={(id) => setSelectedPerkId(id)} />;
+            case Screen.JobBoard: return <JobBoardScreen jobs={jobs} setCurrentScreen={setCurrentScreen} onStartApply={(id) => { setSelectedJobId(id); setCurrentScreen(Screen.Apply); }} />;
+            case Screen.PostAJob: return <PostAJobScreen setCurrentScreen={setCurrentScreen} />;
+            case Screen.Blog: return <BlogScreen articles={articles} setCurrentScreen={setCurrentScreen} />;
+            case Screen.Apply:
+                const jobToApply = jobs.find(j => j.id === selectedJobId);
+                if (!jobToApply) return <JobBoardScreen jobs={jobs} setCurrentScreen={setCurrentScreen} onStartApply={(id) => { setSelectedJobId(id); setCurrentScreen(Screen.Apply); }} />;
+                return <ApplyScreen job={jobToApply} onSuccess={() => setCurrentScreen(Screen.ApplySuccess)} setCurrentScreen={setCurrentScreen} />;
+            case Screen.ApplySuccess:
+                 const appliedJob = jobs.find(j => j.id === selectedJobId);
+                 if (!appliedJob) return <JobBoardScreen jobs={jobs} setCurrentScreen={setCurrentScreen} onStartApply={(id) => { setSelectedJobId(id); setCurrentScreen(Screen.Apply); }} />;
+                 return <ApplySuccessScreen job={appliedJob} setCurrentScreen={setCurrentScreen} />;
+            default: return <HomePage setCurrentScreen={setCurrentScreen} events={events} perks={perks} />;
         }
-    }
-    setActiveDeck(deck);
-  }
+    };
 
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case Screen.Home:
-        return <HomePage setCurrentScreen={setCurrentScreen} events={events} perks={perksData} />;
-      case Screen.Blog:
-        return <BlogScreen articles={articlesData} setCurrentScreen={setCurrentScreen} />;
-      case Screen.PostAJob:
-        return <PostAJobScreen setCurrentScreen={setCurrentScreen} />;
-      case Screen.Welcome:
-      case Screen.Problem:
-      case Screen.Market:
-      case Screen.Traction:
-      case Screen.Ask:
-        return <WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleDeckGeneration} />;
-      case Screen.Generating:
-        return <GeneratingScreen />;
-      case Screen.DeckEditor:
-        return activeDeck ? <DeckEditor deck={activeDeck} setDeck={setActiveDeckFromEditor} setCurrentScreen={setCurrentScreen}/> : <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
-      case Screen.Presentation:
-        return activeDeck ? <PresentationScreen deck={activeDeck} setCurrentScreen={setCurrentScreen} /> : <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
-      
-      // All other screens are rendered within the DashboardLayout
-      default:
-        return (
-            <DashboardLayout currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}>
-                {currentScreen === Screen.Dashboard && <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />}
-                {currentScreen === Screen.Profile && <ProfileScreen />}
-                {currentScreen === Screen.Events && <EventsScreen events={events} onViewDetails={handleViewEventDetails} onRegisterToggle={handleRegisterToggle} />}
-                {currentScreen === Screen.EventDetail && activeEventId && <EventDetailScreen eventId={activeEventId} setCurrentScreen={setCurrentScreen} events={events} onRegisterToggle={handleRegisterToggle} />}
-                {currentScreen === Screen.Perks && <PerksScreen perks={perksData} onViewDetails={handleViewPerkDetails} />}
-                {currentScreen === Screen.PerkDetail && activePerkId && <PerkDetailScreen perkId={activePerkId} allPerks={perksData} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewPerkDetails} />}
-                {currentScreen === Screen.JobBoard && <JobBoardScreen jobs={jobsData} setCurrentScreen={setCurrentScreen} />}
-                {currentScreen === Screen.MyEvents && <MyEventsScreen events={events} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewEventDetails} />}
-                 {/* FIX: Removed unreachable BlogScreen render. It's handled as a standalone page above. */}
-            </DashboardLayout>
-        );
+    // Screens like HomePage, Blog, and PostAJob have their own headers/footers.
+    const standaloneScreens = [Screen.Home, Screen.Blog, Screen.PostAJob];
+    if (standaloneScreens.includes(currentScreen)) {
+        return renderScreen();
     }
-  };
 
-  return (
-    <div className="bg-sunai-beige min-h-screen font-sans">
-      {renderScreen()}
-    </div>
-  );
+    if (dashboardScreens.includes(currentScreen)) {
+        return <DashboardLayout currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}>{renderScreen()}</DashboardLayout>;
+    }
+    
+    return renderScreen();
 };
 
 export default App;

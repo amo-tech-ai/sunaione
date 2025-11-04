@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { DeckData, Slide } from '../types';
 
@@ -105,9 +106,10 @@ export const generateDeck = async (deckData: DeckData): Promise<Slide[]> => {
 
     const jsonResponse = JSON.parse(response.text);
     if (jsonResponse.slides && jsonResponse.slides.length > 0) {
+      // Fix: Ensure that slide content is always an array of strings.
        return jsonResponse.slides.map((slide: any) => ({
           ...slide,
-          content: Array.isArray(slide.content) && slide.content.length > 0 ? slide.content : [String(slide.content || "Default content.")]
+          content: Array.isArray(slide.content) ? slide.content.filter(Boolean) : [String(slide.content || "")]
       }));
     }
     return getFallbackDeck(deckData);
@@ -165,7 +167,8 @@ Concept: "${slideTitle} - ${contentString}"`;
                 responseModalities: [Modality.IMAGE],
             },
         });
-
+        
+        // Fix: Properly access image data from the response.
         const part = response.candidates?.[0]?.content?.parts?.[0];
         if (part && part.inlineData) {
             return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;

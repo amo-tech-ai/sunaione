@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Job, Screen } from '../types';
 import { 
@@ -9,12 +8,13 @@ import {
 interface JobBoardScreenProps {
     jobs: Job[];
     setCurrentScreen: (screen: Screen) => void;
+    onStartApply: (jobId: string) => void;
 }
 
 // Updated categories list for multi-select. "All" is now handled by an empty selection.
 const categories = ['Engineering', 'Product', 'Design', 'Marketing', 'Sales'];
 
-const JobCard: React.FC<{ job: Job }> = ({ job }) => (
+const JobCard: React.FC<{ job: Job; onStartApply: (jobId: string) => void; }> = ({ job, onStartApply }) => (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col group transition-all hover:shadow-lg hover:-translate-y-1">
         <div className="flex items-start justify-between">
             <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -36,7 +36,9 @@ const JobCard: React.FC<{ job: Job }> = ({ job }) => (
                 <span key={tag} className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">{tag}</span>
             ))}
         </div>
-        <button className="w-full mt-auto bg-sunai-dark text-white font-semibold py-2 px-4 rounded-lg hover:bg-black transition-colors">
+        <button 
+            onClick={() => onStartApply(job.id)}
+            className="w-full mt-auto bg-sunai-dark text-white font-semibold py-2 px-4 rounded-lg hover:bg-black transition-colors">
             Apply Now
         </button>
     </div>
@@ -52,7 +54,7 @@ const ValueCard: React.FC<{ icon: React.ElementType; title: string; description:
     </div>
 );
 
-const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen }) => {
+const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen, onStartApply }) => {
     // State now holds an array of selected categories for multi-select
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -121,7 +123,7 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen 
             {/* Job Listings */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredJobs.map(job => (
-                    <JobCard key={job.id} job={job} />
+                    <JobCard key={job.id} job={job} onStartApply={onStartApply} />
                 ))}
             </div>
              {filteredJobs.length === 0 && (
