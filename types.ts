@@ -91,3 +91,40 @@ export interface Job {
     tags: string[];
     category: string;
 }
+
+// Added types for Professional Profile Page
+export type VerificationStatus = 'verified' | 'pending' | 'unverified';
+
+export interface Skill {
+  name: string;
+  description: string;
+}
+
+export interface Experience {
+  role: string;
+  company: string;
+  period: string;
+  type: 'Founder' | 'Employee' | 'Investor' | 'Mentor';
+}
+
+export interface UserProfile {
+  name: string;
+  role: string;
+  location: string;
+  avatar: string;
+  tags: string[];
+  stats: {
+    views: string;
+    completion: number;
+    connections: number;
+    endorsements: number;
+  };
+  verification: {
+    email: VerificationStatus;
+    linkedin: VerificationStatus;
+    github: VerificationStatus;
+    domain: VerificationStatus;
+  };
+  skills: Skill[];
+  experience: Experience[];
+}

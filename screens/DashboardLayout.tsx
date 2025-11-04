@@ -2,14 +2,13 @@ import React from 'react';
 import { Screen } from '../types';
 import { 
     UserCircleIcon, SparklesIcon, CalendarIcon, 
-    // Fix: Added BriefcaseIcon import
-    UsersIcon, ArrowRightIcon, BriefcaseIcon
+    // Fix: Added BriefcaseIcon and new TagIcon import
+    BriefcaseIcon, TagIcon
 } from '../components/Icons';
 import Footer from '../components/Footer';
 
 // Placeholder for real icons
 const DeckIcon = SparklesIcon; 
-const PerksIcon = ArrowRightIcon;
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -49,7 +48,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, currentScre
         <nav className="flex-1 space-y-2 mt-8">
             <NavItem icon={DeckIcon} label="My Decks" screen={Screen.Dashboard} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
             <NavItem icon={UserCircleIcon} label="My Profile" screen={Screen.Profile} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
-            <NavItem icon={UsersIcon} label="My Events" screen={Screen.MyEvents} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            <NavItem icon={CalendarIcon} label="Events" screen={Screen.Events} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            <NavItem icon={TagIcon} label="Perks" screen={Screen.Perks} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            <NavItem icon={BriefcaseIcon} label="Jobs" screen={Screen.JobBoard} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
         </nav>
         <div className="mt-auto">
             <div className="p-4 bg-gray-50 rounded-lg text-center">

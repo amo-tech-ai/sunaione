@@ -1,42 +1,148 @@
-import React, { useState } from 'react';
-import { Screen } from '../types';
+import React from 'react';
+import { Screen, UserProfile, VerificationStatus, Skill, Experience } from '../types';
 import { 
-    UserCircleIcon, ChevronLeftIcon, SparklesIcon, EyeIcon, SaveIcon,
-    UploadIcon, CheckCircleIcon, ArrowRightIcon, LinkedInIcon, LoaderIcon
+    UserCircleIcon, SparklesIcon, EyeIcon, UploadIcon, CheckCircleIcon, 
+    LinkedInIcon, GitHubIcon, GlobeAltIcon, ExclamationTriangleIcon,
+    // Fix: Added missing LoaderIcon import.
+    LoaderIcon,
+    RocketIcon
 } from '../components/Icons';
-import { refineText } from '../services/geminiService';
 
-interface ProfileScreenProps {
-    setCurrentScreen: (screen: Screen) => void;
-}
+// Dummy data for the profile page
+const userProfile: UserProfile = {
+  name: 'Alex Doe',
+  role: 'Founder & CEO at Innovate AI',
+  location: 'San Francisco, CA',
+  avatar: 'https://i.pravatar.cc/150?u=alexdoe',
+  tags: ['Founder', 'Product', 'AI', 'Startup Builder'],
+  stats: {
+    views: '1.2k',
+    completion: 65,
+    connections: 128,
+    endorsements: 42,
+  },
+  verification: {
+    email: 'verified',
+    linkedin: 'unverified',
+    github: 'unverified',
+    domain: 'pending',
+  },
+  skills: [
+    { name: 'AI Strategy', description: 'Developing and implementing AI-driven product roadmaps.' },
+    { name: 'Go-to-Market', description: 'Successfully launched 3 SaaS products, acquiring first 1000 users.' },
+    { name: 'Fundraising', description: 'Raised $1.5M in pre-seed and seed rounds.' },
+  ],
+  experience: [
+    { role: 'Founder & CEO', company: 'Innovate AI', period: '2022 - Present', type: 'Founder' },
+    { role: 'Senior Product Manager', company: 'TechCorp', period: '2018 - 2022', type: 'Employee' },
+  ],
+};
+
 
 // --- Local Components for Profile Screen ---
 
-const Stepper: React.FC<{ steps: string[], currentStep: number }> = ({ steps, currentStep }) => (
-    <div className="w-full">
-        <div className="flex items-center justify-between">
-            {steps.map((step, index) => (
-                <div key={step} className="flex flex-col items-center w-full">
-                    <div className="flex items-center w-full">
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${index + 1 <= currentStep ? 'bg-sunai-orange text-white' : 'bg-gray-200 text-gray-500'}`}>
-                            {index + 1}
+const ProfileHeader: React.FC = () => (
+    <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+            <div>
+                <h1 className="text-3xl font-bold text-sunai-dark">Professional Profile</h1>
+                <p className="text-gray-600 mt-1">Show your skills, experience, and startup journey to connect with founders and investors.</p>
+            </div>
+            <button className="hidden sm:flex bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors items-center gap-2">
+                <LinkedInIcon className="w-5 h-5"/> Import from LinkedIn
+            </button>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="bg-sunai-orange h-2.5 rounded-full" style={{width: `${userProfile.stats.completion}%`}}></div>
+        </div>
+    </div>
+);
+
+const ProfileOverviewCard: React.FC<{ user: UserProfile }> = ({ user }) => (
+    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full border-4 border-white shadow-md"/>
+            <div className="flex-grow text-center sm:text-left">
+                <h2 className="text-2xl font-bold text-sunai-dark">{user.name}</h2>
+                <p className="text-gray-600">{user.role}</p>
+                <p className="text-sm text-gray-500">{user.location}</p>
+                <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+                    {user.tags.map(tag => <span key={tag} className="text-xs font-semibold px-2 py-1 rounded-full bg-orange-100 text-sunai-orange">{tag}</span>)}
+                </div>
+            </div>
+            <div className="flex-shrink-0 flex items-center gap-2">
+                 <button className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors">Edit Profile</button>
+                 <button className="bg-sunai-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-black transition-all">Preview</button>
+            </div>
+        </div>
+        <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div><p className="text-xl font-bold">{user.stats.views}</p><p className="text-sm text-gray-500">Profile Views</p></div>
+            <div><p className="text-xl font-bold">{user.stats.completion}%</p><p className="text-sm text-gray-500">Completion</p></div>
+            <div><p className="text-xl font-bold">{user.stats.connections}</p><p className="text-sm text-gray-500">Connections</p></div>
+            <div><p className="text-xl font-bold">{user.stats.endorsements}</p><p className="text-sm text-gray-500">Endorsements</p></div>
+        </div>
+    </div>
+);
+
+const VerificationStatusCard: React.FC<{ verification: UserProfile['verification'] }> = ({ verification }) => {
+    const statusMap: Record<VerificationStatus, { icon: React.ReactNode, text: string, color: string }> = {
+        verified: { icon: <CheckCircleIcon className="w-5 h-5 text-green-500"/>, text: 'Verified', color: 'text-green-700' },
+        unverified: { icon: <ExclamationTriangleIcon className="w-5 h-5 text-orange-500"/>, text: 'Not Connected', color: 'text-orange-700' },
+        pending: { icon: <LoaderIcon className="w-5 h-5 text-gray-500 animate-spin"/>, text: 'Pending', color: 'text-gray-700' },
+    };
+    return (
+        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-sunai-dark mb-4">Verification Status</h3>
+            <div className="space-y-3">
+                {Object.entries(verification).map(([platform, status]) => (
+                    <div key={platform} className="flex items-center justify-between">
+                        <span className="capitalize font-semibold text-gray-700">{platform}</span>
+                        <div className="flex items-center gap-2">
+                           {statusMap[status].icon}
+                           <span className={`text-sm font-semibold ${statusMap[status].color}`}>{statusMap[status].text}</span>
+                           {status !== 'verified' && <button className="text-xs font-bold text-sunai-orange hover:underline">
+                               {status === 'pending' ? 'Check' : 'Connect'}
+                            </button>}
                         </div>
-                        {index < steps.length - 1 && (
-                            <div className={`flex-grow h-1 ${index + 1 < currentStep ? 'bg-sunai-orange' : 'bg-gray-200'}`}></div>
-                        )}
                     </div>
-                    <p className={`mt-2 text-xs text-center ${index + 1 === currentStep ? 'text-sunai-orange font-bold' : 'text-gray-500'}`}>{step}</p>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const SkillsCard: React.FC<{ skills: Skill[] }> = ({ skills }) => (
+    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        <div className="flex justify-between items-center mb-4">
+            <div>
+                <h3 className="text-lg font-bold text-sunai-dark">Your Skills</h3>
+                <p className="text-sm text-gray-500">Add or update the skills that best describe your experience.</p>
+            </div>
+            <button className="bg-sunai-orange text-white font-bold py-2 px-4 rounded-lg shadow text-sm">+ Add Skill</button>
+        </div>
+        <div className="space-y-4">
+            {skills.map(skill => (
+                <div key={skill.name} className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-bold text-gray-800">{skill.name}</h4>
+                    <p className="text-sm text-gray-600">{skill.description}</p>
                 </div>
             ))}
         </div>
     </div>
 );
 
-const FileUploadZone: React.FC<{ title: string, recommendation: string }> = ({ title, recommendation }) => (
-    <div className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-sunai-orange hover:bg-gray-50 transition-colors">
-        <UploadIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-        <p className="font-semibold text-gray-700">{title}</p>
-        <p className="text-xs text-gray-500">{recommendation}</p>
+const ExperienceCard: React.FC<{ experiences: Experience[] }> = ({ experiences }) => (
+    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        <h3 className="text-lg font-bold text-sunai-dark mb-4">Your Experiences</h3>
+        {experiences.map(exp => (
+            <div key={exp.company} className="flex gap-4 border-l-2 border-gray-200 pl-4 py-2 relative">
+                 <div className="absolute -left-2 top-3 w-4 h-4 rounded-full bg-sunai-orange border-2 border-white"></div>
+                 <div>
+                    <p className="font-bold">{exp.role} <span className="font-normal text-gray-600">at {exp.company}</span></p>
+                    <p className="text-sm text-gray-500">{exp.period}</p>
+                 </div>
+            </div>
+        ))}
     </div>
 );
 
@@ -48,29 +154,8 @@ const CircularProgress: React.FC<{ percentage: number, size?: number, strokeWidt
     return (
         <div className="relative" style={{ width: size, height: size }}>
             <svg className="w-full h-full" viewBox={`0 0 ${size} ${size}`}>
-                <circle
-                    className="text-gray-200"
-                    stroke="currentColor"
-                    strokeWidth={strokeWidth}
-                    fill="transparent"
-                    r={radius}
-                    cx={size / 2}
-                    cy={size / 2}
-                />
-                <circle
-                    className="text-sunai-orange"
-                    stroke="currentColor"
-                    strokeWidth={strokeWidth}
-                    strokeLinecap="round"
-                    fill="transparent"
-                    r={radius}
-                    cx={size / 2}
-                    cy={size / 2}
-                    strokeDasharray={circumference}
-                    strokeDashoffset={offset}
-                    style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
-                    transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                />
+                <circle className="text-gray-200" stroke="currentColor" strokeWidth={strokeWidth} fill="transparent" r={radius} cx={size / 2} cy={size / 2} />
+                <circle className="text-sunai-orange" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" fill="transparent" r={radius} cx={size / 2} cy={size / 2} strokeDasharray={circumference} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 0.5s ease-out' }} transform={`rotate(-90 ${size / 2} ${size / 2})`} />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-2xl font-bold text-sunai-dark">{percentage}%</span>
@@ -79,207 +164,79 @@ const CircularProgress: React.FC<{ percentage: number, size?: number, strokeWidt
     );
 };
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ setCurrentScreen }) => {
-    const [currentStep, setCurrentStep] = useState(1);
-    const steps = ["Company Basics", "About Your Startup", "Traction & Metrics", "Team & Culture", "What You Need"];
-
-    const [profileData, setProfileData] = useState({
-        companyName: '',
-        websiteUrl: '',
-        tagline: '',
-        foundedYear: '2024',
-        companyDescription: '',
-    });
-    const [profileStrength, setProfileStrength] = useState(0);
-    const [refiningField, setRefiningField] = useState<string | null>(null);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setProfileData(prev => ({ ...prev, [name]: value }));
-        
-        const updatedProfileData = { ...profileData, [name]: value };
-        const totalFields = Object.keys(updatedProfileData).length;
-        const filledFields = Object.values(updatedProfileData).filter(v => v && String(v).trim() !== '').length;
-        setProfileStrength(Math.round((filledFields / totalFields) * 100));
-    };
-
-    const handleLinkedInImport = () => {
-        const url = window.prompt("Please enter your company's LinkedIn profile URL:");
-        if (url) {
-            alert(`Thanks! LinkedIn import is coming soon. We'll use this URL to help pre-fill your profile:\n${url}`);
-        }
-    };
-    
-    const handleRefine = async (fieldName: keyof typeof profileData) => {
-        const textToRefine = profileData[fieldName];
-        if (!textToRefine) return;
-
-        setRefiningField(fieldName);
-        try {
-            const refinedText = await refineText(textToRefine, "Company Description");
-            setProfileData(prev => ({ ...prev, [fieldName]: refinedText }));
-        } catch (error) {
-            console.error("Failed to refine text:", error);
-        } finally {
-            setRefiningField(null);
-        }
-    };
-    
-    const renderRefineButton = (fieldName: keyof typeof profileData, label: string) => (
-        <button
-            onClick={() => handleRefine(fieldName)}
-            disabled={!profileData[fieldName] || refiningField === fieldName}
-            className="absolute top-0 right-0 mt-1 mr-1 text-xs bg-orange-100 text-sunai-orange font-semibold py-1 px-2 rounded-md hover:bg-orange-200 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            {refiningField === fieldName ? (
-                <LoaderIcon className="w-4 h-4 animate-spin" />
-            ) : (
-                <SparklesIcon className="w-4 h-4" />
-            )}
-            {refiningField === fieldName ? 'Refining...' : label}
-        </button>
-    );
-
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length));
-    const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
-
-    return (
-        <>
-            {/* Title and Stepper */}
-            <div className="mb-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold text-sunai-dark">Create Startup Profile</h1>
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500 flex items-center gap-2"><LoaderIcon className="w-4 h-4 animate-spin"/> Auto-saving...</span>
-                        <button className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-                            <EyeIcon className="w-5 h-5"/> Preview
-                        </button>
-                    </div>
+const SkillMatchScoreCard: React.FC = () => (
+    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        <h3 className="text-lg font-bold text-sunai-dark mb-4">Skill Match Score</h3>
+        <div className="space-y-4">
+            <div>
+                <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1">
+                    <span>Startups</span>
+                    <span>92%</span>
                 </div>
-                <Stepper steps={steps} currentStep={currentStep} />
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-sunai-orange h-2 rounded-full" style={{ width: '92%' }}></div>
+                </div>
             </div>
-
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                {/* Form Card */}
-                <div className="lg:col-span-2 bg-white rounded-xl shadow-md border border-gray-200 p-8">
-                    
-                    {currentStep === 1 && (
-                        <>
-                            <h2 className="text-2xl font-bold text-sunai-dark">Company Basics</h2>
-                            <p className="text-gray-600 mt-1 mb-6">Let's start with the essential information about your company.</p>
-                            
-                            <div className="space-y-6">
-                                <div>
-                                    <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
-                                    <input type="text" name="companyName" id="companyName" value={profileData.companyName} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition" placeholder="Your registered business name" />
-                                </div>
-                                <div>
-                                    <label htmlFor="websiteUrl" className="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
-                                    <input type="url" name="websiteUrl" id="websiteUrl" value={profileData.websiteUrl} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition" placeholder="https://yourstartup.com" />
-                                    <p className="text-xs text-gray-500 mt-1">We'll auto-fetch your logo and company info.</p>
-                                </div>
-                                <div>
-                                    <label htmlFor="tagline" className="block text-sm font-medium text-gray-700 mb-1">Company Tagline *</label>
-                                    <textarea name="tagline" id="tagline" rows={2} maxLength={70} value={profileData.tagline} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition resize-none" placeholder="A memorable one-liner (e.g., 'AI-powered logistics for Latin America')"></textarea>
-                                    <p className="text-xs text-gray-500 text-right">{profileData.tagline.length}/70 characters</p>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
-                                        <FileUploadZone title="Upload Logo" recommendation="PNG or JPG, max 2MB" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Cover Image</label>
-                                        <FileUploadZone title="Upload Cover" recommendation="1200x400px recommended" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label htmlFor="foundedYear" className="block text-sm font-medium text-gray-700 mb-1">Founded Year</label>
-                                    <input type="number" name="foundedYear" id="foundedYear" value={profileData.foundedYear} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition" placeholder="2024" />
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {currentStep === 2 && (
-                        <>
-                             <h2 className="text-2xl font-bold text-sunai-dark">About Your Startup</h2>
-                            <p className="text-gray-600 mt-1 mb-6">Provide a comprehensive overview of your company. This is your chance to tell your story.</p>
-                            
-                            <div className="space-y-6">
-                                <div className="relative">
-                                    <label htmlFor="companyDescription" className="block text-sm font-medium text-gray-700 mb-1">Company Description *</label>
-                                    <textarea 
-                                        name="companyDescription" 
-                                        id="companyDescription" 
-                                        rows={10} 
-                                        value={profileData.companyDescription} 
-                                        onChange={handleInputChange} 
-                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition" 
-                                        placeholder="Describe your company's mission, vision, the product/service you offer, and what makes you unique. Aim for 2-3 paragraphs."
-                                    />
-                                    {renderRefineButton('companyDescription', 'Refine with AI')}
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
-                        <button onClick={prevStep} disabled={currentStep === 1} className="text-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <ChevronLeftIcon className="w-5 h-5"/> Previous
-                        </button>
-                        <div className="flex items-center gap-3">
-                            <button className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-                                <SaveIcon className="w-5 h-5"/> Save Draft
-                            </button>
-                            <button onClick={nextStep} className="bg-sunai-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
-                                Continue <ArrowRightIcon className="w-5 h-5"/>
-                            </button>
-                        </div>
-                    </div>
+            <div>
+                <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1">
+                    <span>Tech Investors</span>
+                    <span>85%</span>
                 </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-sunai-orange h-2 rounded-full" style={{ width: '85%' }}></div>
+                </div>
+            </div>
+            <div>
+                <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1">
+                    <span>Co-Founder Match</span>
+                    <span>78%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-sunai-orange h-2 rounded-full" style={{ width: '78%' }}></div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
-                {/* Sidebar */}
+
+const ProfileScreen: React.FC = () => {
+    return (
+        <div>
+            <ProfileHeader />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <main className="lg:col-span-2 space-y-8">
+                    <ProfileOverviewCard user={userProfile} />
+                    <SkillsCard skills={userProfile.skills} />
+                    <ExperienceCard experiences={userProfile.experience} />
+                </main>
                 <aside className="lg:col-span-1 space-y-6">
                     <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 flex flex-col items-center text-center">
                         <h3 className="text-lg font-bold text-sunai-dark">Profile Strength</h3>
-                        <div className="my-4">
-                           <CircularProgress percentage={profileStrength} />
-                        </div>
-                        <p className="text-sm text-gray-600">Keep going! Add more details to strengthen your profile.</p>
+                        <div className="my-4"><CircularProgress percentage={userProfile.stats.completion} /></div>
+                        <p className="text-sm text-gray-600">Moderate Profile — add more skills to improve visibility.</p>
+                        <button className="mt-3 w-full bg-gray-100 text-gray-800 font-bold py-2 rounded-md hover:bg-gray-200">Complete Profile</button>
                     </div>
-
+                    <VerificationStatusCard verification={userProfile.verification} />
                     <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                        <h3 className="text-lg font-bold text-sunai-dark flex items-center gap-2 mb-4"><SparklesIcon className="w-5 h-5 text-sunai-orange" /> Pro Tips</h3>
+                        <h3 className="text-lg font-bold text-sunai-dark flex items-center gap-2 mb-4"><SparklesIcon className="w-5 h-5 text-sunai-orange" /> AI Recommendations</h3>
                         <ul className="space-y-3 text-sm text-gray-700">
-                            <li className="flex items-start gap-3"><CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" /> <span>Add specific metrics to stand out to investors.</span></li>
-                            <li className="flex items-start gap-3"><CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" /> <span>Upload high-quality logo and cover images.</span></li>
-                            <li className="flex items-start gap-3"><CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" /> <span>Be clear about what help you need.</span></li>
-                            <li className="flex items-start gap-3"><CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" /> <span>Complete your profile for 3x more visibility.</span></li>
+                             <li className="flex items-start gap-3"><CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" /> <span>Add 3 technical skills to boost visibility.</span></li>
+                             <li className="flex items-start gap-3"><CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" /> <span>Quantify your achievements with metrics.</span></li>
                         </ul>
                     </div>
-                    
+                    <SkillMatchScoreCard />
                     <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
                          <h3 className="text-lg font-bold text-sunai-dark mb-4">Quick Actions</h3>
                          <div className="space-y-3">
-                            <button className="w-full text-left bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold py-2 px-3 rounded-lg transition-colors flex items-center gap-3 text-sm">
-                                <SparklesIcon className="w-5 h-5 text-sunai-orange" /> Generate Pitch Deck
-                            </button>
-                            <button 
-                                onClick={handleLinkedInImport}
-                                className="w-full text-left bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold py-2 px-3 rounded-lg transition-colors flex items-center gap-3 text-sm">
-                                <LinkedInIcon className="w-5 h-5 text-blue-600" /> Import from LinkedIn
-                            </button>
-                            <button className="w-full text-left bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold py-2 px-3 rounded-lg transition-colors flex items-center gap-3 text-sm">
-                                <EyeIcon className="w-5 h-5" /> Preview Public Profile
-                            </button>
+                            <button className="w-full text-left bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold py-2 px-3 rounded-lg transition-colors flex items-center gap-3 text-sm"><UploadIcon className="w-5 h-5" /> Upload Resume</button>
+                            <button className="w-full text-left bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold py-2 px-3 rounded-lg transition-colors flex items-center gap-3 text-sm"><GitHubIcon className="w-5 h-5" /> Connect GitHub</button>
+                            <button className="w-full text-left bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold py-2 px-3 rounded-lg transition-colors flex items-center gap-3 text-sm"><RocketIcon className="w-5 h-5" /> Generate AI Pitch</button>
                          </div>
                     </div>
-
                 </aside>
             </div>
-        </>
+        </div>
     );
 };
 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-// Fix: Added Job import
-import { Screen, DeckData, Deck, Slide, TemplateID, Event, Perk, Job } from './types';
+// Fix: Added Job and UserProfile import
+import { Screen, DeckData, Deck, Slide, TemplateID, Event, Perk, Job, UserProfile } from './types';
 import WizardSteps from './screens/WizardSteps';
 import GeneratingScreen from './screens/GeneratingScreen';
 import DeckEditor from './screens/DeckEditor';
 import Dashboard from './screens/Dashboard';
 import { generateDeck } from './services/geminiService';
-import HomePage, { PublicHeader } from './screens/HomePage';
+import HomePage from './screens/HomePage';
 import DashboardLayout from './screens/DashboardLayout';
 import ProfileScreen from './screens/ProfileScreen';
 import EventsScreen from './screens/EventsScreen';
@@ -15,7 +15,6 @@ import MyEventsScreen from './screens/MyEventsScreen';
 import PerksScreen from './screens/PerksScreen';
 import PresentationScreen from './screens/PresentationScreen';
 import PerkDetailScreen from './screens/PerkDetailScreen';
-// Fix: Added JobBoardScreen import
 import JobBoardScreen from './screens/JobBoardScreen';
 import Footer from './components/Footer';
 
@@ -89,7 +88,6 @@ const perksData: Perk[] = [
     { id: '6', partner: 'Google Cloud for Startups', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg', description: 'Build your startup on Google Cloud and get up to $100,000 in cloud credits for your first year, plus access to technical training and business support.', offer: '$100k Credits', category: 'Cloud', users: 760, rating: 4.9 },
 ];
 
-// Fix: Added dummy data for jobs
 const jobsData: Job[] = [
     { id: '1', title: 'Senior AI Engineer', companyName: 'Innovate AI', companyLogo: 'https://clerk.com/_next/image?url=%2Fdocs%2Fclerk-logomark-light.png&w=64&q=75', location: 'Remote', type: 'Full-time', salary: '150k - 190k', isRemote: true, tags: ['Python', 'PyTorch', 'LLMs'], category: 'Engineering' },
     { id: '2', title: 'Product Manager, Generative AI', companyName: 'Creative Solutions', companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg', location: 'San Francisco, CA', type: 'Full-time', salary: '160k - 200k', isRemote: false, tags: ['Product Strategy', 'AI/ML', 'SaaS'], category: 'Product' },
@@ -193,38 +191,6 @@ const App: React.FC = () => {
   }
 
   const renderScreen = () => {
-    const dashboardScreens = [Screen.Dashboard, Screen.Profile, Screen.MyEvents];
-    const publicScreens = [Screen.Events, Screen.EventDetail, Screen.Perks, Screen.PerkDetail, Screen.JobBoard];
-    
-    if (dashboardScreens.includes(currentScreen)) {
-        return (
-            <DashboardLayout currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}>
-                {currentScreen === Screen.Dashboard && <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />}
-                {currentScreen === Screen.Profile && <ProfileScreen setCurrentScreen={setCurrentScreen} />}
-                {currentScreen === Screen.MyEvents && <MyEventsScreen events={events} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewEventDetails} />}
-            </DashboardLayout>
-        );
-    }
-
-    if (publicScreens.includes(currentScreen)) {
-        return (
-            <>
-                <PublicHeader onNavigate={setCurrentScreen} />
-                <div className="pt-20">
-                    <main className="p-8 min-h-screen">
-                        {currentScreen === Screen.Events && <EventsScreen events={events} onViewDetails={handleViewEventDetails} onRegisterToggle={handleRegisterToggle} />}
-                        {currentScreen === Screen.EventDetail && activeEventId && <EventDetailScreen eventId={activeEventId} setCurrentScreen={setCurrentScreen} events={events} onRegisterToggle={handleRegisterToggle} />}
-                        {currentScreen === Screen.Perks && <PerksScreen perks={perksData} onViewDetails={handleViewPerkDetails} />}
-                        {currentScreen === Screen.PerkDetail && activePerkId && <PerkDetailScreen perkId={activePerkId} allPerks={perksData} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewPerkDetails} />}
-                        {currentScreen === Screen.JobBoard && <JobBoardScreen jobs={jobsData} />}
-                    </main>
-                    <Footer onNavigate={setCurrentScreen} />
-                </div>
-            </>
-        );
-    }
-
-
     switch (currentScreen) {
       case Screen.Home:
         return <HomePage setCurrentScreen={setCurrentScreen} events={events} perks={perksData} />;
@@ -240,9 +206,21 @@ const App: React.FC = () => {
         return activeDeck ? <DeckEditor deck={activeDeck} setDeck={setActiveDeckFromEditor} setCurrentScreen={setCurrentScreen}/> : <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
       case Screen.Presentation:
         return activeDeck ? <PresentationScreen deck={activeDeck} setCurrentScreen={setCurrentScreen} /> : <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
+      
+      // All other screens are rendered within the DashboardLayout
       default:
-        // Default to dashboard if logged in, otherwise home
-        return <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
+        return (
+            <DashboardLayout currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}>
+                {currentScreen === Screen.Dashboard && <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />}
+                {currentScreen === Screen.Profile && <ProfileScreen />}
+                {currentScreen === Screen.Events && <EventsScreen events={events} onViewDetails={handleViewEventDetails} onRegisterToggle={handleRegisterToggle} />}
+                {currentScreen === Screen.EventDetail && activeEventId && <EventDetailScreen eventId={activeEventId} setCurrentScreen={setCurrentScreen} events={events} onRegisterToggle={handleRegisterToggle} />}
+                {currentScreen === Screen.Perks && <PerksScreen perks={perksData} onViewDetails={handleViewPerkDetails} />}
+                {currentScreen === Screen.PerkDetail && activePerkId && <PerkDetailScreen perkId={activePerkId} allPerks={perksData} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewPerkDetails} />}
+                {currentScreen === Screen.JobBoard && <JobBoardScreen jobs={jobsData} />}
+                {currentScreen === Screen.MyEvents && <MyEventsScreen events={events} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewEventDetails} />}
+            </DashboardLayout>
+        );
     }
   };
 
