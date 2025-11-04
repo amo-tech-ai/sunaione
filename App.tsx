@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-// Fix: Added Job and UserProfile import
-import { Screen, DeckData, Deck, Slide, TemplateID, Event, Perk, Job, UserProfile } from './types';
+// Fix: Added Job, UserProfile, and Article import
+import { Screen, DeckData, Deck, Slide, TemplateID, Event, Perk, Job, UserProfile, Article } from './types';
 import WizardSteps from './screens/WizardSteps';
 import GeneratingScreen from './screens/GeneratingScreen';
 import DeckEditor from './screens/DeckEditor';
@@ -17,6 +17,7 @@ import PresentationScreen from './screens/PresentationScreen';
 import PerkDetailScreen from './screens/PerkDetailScreen';
 import JobBoardScreen from './screens/JobBoardScreen';
 import Footer from './components/Footer';
+import BlogScreen from './screens/BlogScreen';
 
 
 const initialEventsData: Event[] = [
@@ -93,6 +94,66 @@ const jobsData: Job[] = [
     { id: '2', title: 'Product Manager, Generative AI', companyName: 'Creative Solutions', companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg', location: 'San Francisco, CA', type: 'Full-time', salary: '160k - 200k', isRemote: false, tags: ['Product Strategy', 'AI/ML', 'SaaS'], category: 'Product' },
     { id: '3', title: 'UX/UI Designer for AI Tools', companyName: 'Sun AI', companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/1/15/HubSpot_Logo.svg', location: 'Remote (US)', type: 'Full-time', salary: '120k - 150k', isRemote: true, tags: ['Figma', 'User Research', 'Design Systems'], category: 'Design' },
     { id: '4', title: 'Marketing Lead, AI Platforms', companyName: 'Growth Rocket', companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg', location: 'New York, NY', type: 'Full-time', salary: '140k - 170k', isRemote: false, tags: ['Go-to-Market', 'Demand Gen', 'SaaS'], category: 'Marketing' },
+];
+
+const articlesData: Article[] = [
+    {
+        id: '1',
+        title: 'The Future of Founders in the AI Era',
+        excerpt: 'Discover how AI is changing how startups scale, pitch, and innovate, paving the way for a new generation of entrepreneurs.',
+        imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop',
+        category: 'Founder Stories',
+        author: { name: 'Sun AI Team', avatarUrl: 'https://i.pravatar.cc/150?u=sunai' },
+        date: 'October 26, 2023',
+        isFeatured: true,
+    },
+    {
+        id: '2',
+        title: '10 Tips for Building AI Products Users Love',
+        excerpt: 'Essential lessons for founders building AI-powered tools that solve real problems and create delightful user experiences.',
+        imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+        category: 'Tutorials',
+        author: { name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=janedoe' },
+        date: 'October 24, 2023',
+    },
+    {
+        id: '3',
+        title: 'AI Summit Recap: 5 Key Takeaways for Founders',
+        excerpt: 'We attended the largest AI summit of the year. Here are the most important trends and insights for startup builders.',
+        imageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2070&auto=format&fit=crop',
+        category: 'Events',
+        author: { name: 'Sun AI Team', avatarUrl: 'https://i.pravatar.cc/150?u=sunai' },
+        date: 'October 22, 2023',
+    },
+    {
+        id: '4',
+        title: 'From Idea to IPO: A Founder\'s Journey',
+        excerpt: 'An in-depth interview with the founder of a successful AI startup on their challenges, triumphs, and lessons learned.',
+        imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop',
+        category: 'Founder Stories',
+        author: { name: 'Alex Johnson', avatarUrl: 'https://i.pravatar.cc/150?u=alexjohnson' },
+        date: 'October 20, 2023',
+    },
+    {
+        id: '5',
+        title: 'How to Build with the Gemini API',
+        excerpt: 'A step-by-step guide to integrating Google\'s powerful Gemini model into your applications.',
+        imageUrl: 'https://images.unsplash.com/photo-1614741118884-62ac62b31260?q=80&w=1964&auto=format&fit=crop',
+        category: 'Tutorials',
+        author: { name: 'Sun AI Team', avatarUrl: 'https://i.pravatar.cc/150?u=sunai' },
+        date: 'Coming Soon',
+        isPlaceholder: true,
+    },
+    {
+        id: '6',
+        title: 'Investor Insights: What We Look For in AI Startups',
+        excerpt: 'A guest post from a leading VC firm on the key metrics and qualities they seek in early-stage AI companies.',
+        imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop',
+        category: 'Startup Lessons',
+        author: { name: 'Guest Contributor', avatarUrl: 'https://i.pravatar.cc/150?u=guest' },
+        date: 'Coming Soon',
+        isPlaceholder: true,
+    },
 ];
 
 const App: React.FC = () => {
@@ -194,6 +255,8 @@ const App: React.FC = () => {
     switch (currentScreen) {
       case Screen.Home:
         return <HomePage setCurrentScreen={setCurrentScreen} events={events} perks={perksData} />;
+      case Screen.Blog:
+        return <BlogScreen articles={articlesData} setCurrentScreen={setCurrentScreen} />;
       case Screen.Welcome:
       case Screen.Problem:
       case Screen.Market:

@@ -18,6 +18,7 @@ export const PublicHeader: React.FC<{ onNavigate: (screen: Screen) => void }> = 
             <button onClick={() => onNavigate(Screen.Events)} className="hover:text-sunai-orange transition-colors">Events</button>
             <button onClick={() => onNavigate(Screen.Perks)} className="hover:text-sunai-orange transition-colors">Perks</button>
             <button onClick={() => onNavigate(Screen.JobBoard)} className="hover:text-sunai-orange transition-colors">Jobs</button>
+            <button onClick={() => onNavigate(Screen.Blog)} className="hover:text-sunai-orange transition-colors">Blog</button>
         </nav>
         <div className="flex items-center gap-4">
             <button

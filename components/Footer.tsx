@@ -21,6 +21,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
     { label: 'Events', screen: Screen.Events },
     { label: 'Jobs', screen: Screen.JobBoard },
     { label: 'Perks & Deals', screen: Screen.Perks },
+    { label: 'Blog', screen: Screen.Blog },
     { label: 'About Us', screen: Screen.Home },
     { label: 'Contact', screen: Screen.Home },
   ];

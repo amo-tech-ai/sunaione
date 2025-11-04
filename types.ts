@@ -17,6 +17,7 @@ export enum Screen {
   Perks = 'Perks',
   PerkDetail = 'PerkDetail',
   JobBoard = 'JobBoard',
+  Blog = 'Blog',
 }
 
 export interface Slide {
@@ -90,6 +91,21 @@ export interface Job {
     isRemote: boolean;
     tags: string[];
     category: string;
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  excerpt: string;
+  imageUrl: string;
+  category: 'AI News' | 'Founder Stories' | 'Tutorials' | 'Events' | 'Startup Lessons';
+  author: {
+    name: string;
+    avatarUrl: string;
+  };
+  date: string;
+  isFeatured?: boolean;
+  isPlaceholder?: boolean;
 }
 
 // Added types for Professional Profile Page

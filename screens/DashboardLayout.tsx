@@ -3,7 +3,7 @@ import { Screen } from '../types';
 import { 
     UserCircleIcon, SparklesIcon, CalendarIcon, 
     // Fix: Added BriefcaseIcon and new TagIcon import
-    BriefcaseIcon, TagIcon
+    BriefcaseIcon, TagIcon, ChatBubbleLeftRightIcon
 } from '../components/Icons';
 import Footer from '../components/Footer';
 
@@ -51,6 +51,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, currentScre
             <NavItem icon={CalendarIcon} label="Events" screen={Screen.Events} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
             <NavItem icon={TagIcon} label="Perks" screen={Screen.Perks} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
             <NavItem icon={BriefcaseIcon} label="Jobs" screen={Screen.JobBoard} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            <NavItem icon={ChatBubbleLeftRightIcon} label="Blog" screen={Screen.Blog} currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
         </nav>
         <div className="mt-auto">
             <div className="p-4 bg-gray-50 rounded-lg text-center">
