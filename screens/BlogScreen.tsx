@@ -13,7 +13,7 @@ const categories = ['All', 'AI News', 'Founder Stories', 'Tutorials', 'Events', 
 
 const FeaturedArticleCard: React.FC<{ article: Article }> = ({ article }) => {
     return (
-        <div className="relative rounded-2xl overflow-hidden group cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-300">
+        <div className="relative rounded-2xl overflow-hidden group cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-300 animate-fade-in">
             <img src={article.imageUrl} alt={article.title} className="w-full h-96 object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-8 text-white">
@@ -49,7 +49,7 @@ const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
             <div className="p-6 flex flex-col flex-grow">
                 <span className="text-xs font-bold px-2 py-1 rounded-full self-start mb-3 bg-orange-100 text-sunai-orange">{article.category}</span>
                 <h3 className="font-bold text-lg text-sunai-dark flex-grow group-hover:text-sunai-orange transition-colors">{article.title}</h3>
-                <p className="text-sm text-gray-600 mt-2">{article.excerpt}</p>
+                {!article.isPlaceholder && <p className="text-sm text-gray-600 mt-2">{article.excerpt}</p>}
                 <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
                     <img src={article.author.avatarUrl} alt={article.author.name} className="w-8 h-8 rounded-full" />
                     <div>
@@ -79,31 +79,43 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
 
     return (
         <div className="bg-sunai-beige">
+            <style>{`
+                @keyframes fade-in {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in {
+                    animation: fade-in 0.5s ease-out forwards;
+                }
+            `}</style>
             <PublicHeader onNavigate={setCurrentScreen} />
             <main className="pt-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     {/* Header */}
-                    <div className="text-center">
+                    <header className="text-center mb-12">
                         <h1 className="text-4xl md:text-5xl font-bold text-sunai-dark">Blog</h1>
                         <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">Insights, tutorials, and stories from the Sun AI startup community.</p>
-                    </div>
+                    </header>
 
                     {/* Search and Filters */}
-                    <div className="mt-8 max-w-4xl mx-auto">
+                    <section aria-label="Search and filter articles" className="my-8 max-w-4xl mx-auto">
                         <div className="relative">
                             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <input
-                                type="text"
-                                placeholder="Search articles, topics, or founders..."
+                                type="search"
+                                aria-label="Search articles"
+                                placeholder="Search articles, topics, or founders…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition"
                             />
                         </div>
-                        <div className="mt-4 flex flex-wrap justify-center gap-2">
+                        <div role="tablist" aria-label="Article categories" className="mt-4 flex flex-wrap justify-center gap-2">
                             {categories.map(category => (
                                 <button
                                     key={category}
+                                    role="tab"
+                                    aria-selected={activeCategory === category}
                                     onClick={() => setActiveCategory(category)}
                                     className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${
                                         activeCategory === category
@@ -115,31 +127,38 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </section>
 
                     {/* Featured Article */}
                     {featuredArticle && activeCategory === 'All' && searchQuery === '' && (
-                        <div className="mt-16">
+                        <section aria-label="Featured article" className="my-16">
                             <FeaturedArticleCard article={featuredArticle} />
-                        </div>
+                        </section>
                     )}
 
                     {/* Article Grid */}
-                    <div className="mt-16">
-                        <h2 className="text-3xl font-bold text-sunai-dark mb-8">{activeCategory === 'All' ? 'Latest from the Community' : `Showing articles in "${activeCategory}"`}</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {filteredArticles.map(article => (
-                                <ArticleCard key={article.id} article={article} />
-                            ))}
-                        </div>
-                    </div>
+                    <section aria-labelledby="latest-articles-heading" className="my-16">
+                        <h2 id="latest-articles-heading" className="text-3xl font-bold text-sunai-dark mb-8">{activeCategory === 'All' ? 'Latest from the Community' : `Showing articles in "${activeCategory}"`}</h2>
+                        {filteredArticles.length > 0 ? (
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {filteredArticles.map(article => (
+                                    <ArticleCard key={article.id} article={article} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+                                <h3 className="text-xl font-bold text-sunai-dark">No articles found</h3>
+                                <p className="text-gray-600 mt-2">Try adjusting your search or filters.</p>
+                            </div>
+                        )}
+                    </section>
 
                     {/* Pagination */}
-                    <div className="mt-16 flex justify-center items-center gap-4 text-sm font-medium">
+                    <nav aria-label="Pagination" className="my-16 flex justify-center items-center gap-4 text-sm font-medium">
                         <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled>← Previous</button>
-                        <span className="px-4 py-2 rounded-lg bg-orange-100 text-sunai-orange">Page 1 of 1</span>
-                        <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled>Next →</button>
-                    </div>
+                        <span className="px-4 py-2 rounded-lg bg-orange-100 text-sunai-orange" aria-current="page">Page 1 of 5</span>
+                        <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100">Next →</button>
+                    </nav>
                 </div>
             </main>
             <Footer onNavigate={setCurrentScreen} />

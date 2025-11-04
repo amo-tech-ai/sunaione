@@ -104,7 +104,7 @@ const articlesData: Article[] = [
         imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop',
         category: 'Founder Stories',
         author: { name: 'Sun AI Team', avatarUrl: 'https://i.pravatar.cc/150?u=sunai' },
-        date: 'October 26, 2023',
+        date: 'Sep 21, 2025',
         isFeatured: true,
     },
     {
@@ -114,7 +114,7 @@ const articlesData: Article[] = [
         imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
         category: 'Tutorials',
         author: { name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=janedoe' },
-        date: 'October 24, 2023',
+        date: 'Sep 18, 2025',
     },
     {
         id: '3',
@@ -123,16 +123,17 @@ const articlesData: Article[] = [
         imageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2070&auto=format&fit=crop',
         category: 'Events',
         author: { name: 'Sun AI Team', avatarUrl: 'https://i.pravatar.cc/150?u=sunai' },
-        date: 'October 22, 2023',
+        date: 'Sep 15, 2025',
     },
     {
         id: '4',
-        title: 'From Idea to IPO: A Founder\'s Journey',
-        excerpt: 'An in-depth interview with the founder of a successful AI startup on their challenges, triumphs, and lessons learned.',
-        imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop',
-        category: 'Founder Stories',
-        author: { name: 'Alex Johnson', avatarUrl: 'https://i.pravatar.cc/150?u=alexjohnson' },
-        date: 'October 20, 2023',
+        title: 'Upcoming Article — AI in Latin America',
+        excerpt: 'Exploring the booming AI ecosystem in Latin America, from emerging startups to established tech hubs.',
+        imageUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2070&auto=format&fit=crop',
+        category: 'AI News',
+        author: { name: 'Community', avatarUrl: 'https://i.pravatar.cc/150?u=community' },
+        date: 'Coming Soon',
+        isPlaceholder: true,
     },
     {
         id: '5',
@@ -146,7 +147,7 @@ const articlesData: Article[] = [
     },
     {
         id: '6',
-        title: 'Investor Insights: What We Look For in AI Startups',
+        title: 'Guest Post — Investor Insights Coming Soon',
         excerpt: 'A guest post from a leading VC firm on the key metrics and qualities they seek in early-stage AI companies.',
         imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop',
         category: 'Startup Lessons',
@@ -282,6 +283,7 @@ const App: React.FC = () => {
                 {currentScreen === Screen.PerkDetail && activePerkId && <PerkDetailScreen perkId={activePerkId} allPerks={perksData} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewPerkDetails} />}
                 {currentScreen === Screen.JobBoard && <JobBoardScreen jobs={jobsData} />}
                 {currentScreen === Screen.MyEvents && <MyEventsScreen events={events} setCurrentScreen={setCurrentScreen} onViewDetails={handleViewEventDetails} />}
+                 {/* FIX: Removed unreachable BlogScreen render. It's handled as a standalone page above. */}
             </DashboardLayout>
         );
     }
