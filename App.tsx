@@ -22,6 +22,7 @@ import PostAJobScreen from './screens/PostAJobScreen';
 import BlogScreen from './screens/BlogScreen';
 import ApplyScreen from './screens/ApplyScreen';
 import ApplySuccessScreen from './screens/ApplySuccessScreen';
+import PublicLayout from './screens/PublicLayout';
 
 // --- Constants ---
 const WIZARD_DRAFT_KEY = 'amo_wizard_draft';
@@ -237,7 +238,7 @@ export const App: React.FC = () => {
     }, [deckData]);
     
     const handleCreateDeck = async (newDeckData: DeckData, navigate: (path: string) => void) => {
-        navigate('/generating');
+        navigate('/pitch-deck/generating');
         
         try {
             const newSlides: Slide[] = await generateDeck(newDeckData);
@@ -273,7 +274,7 @@ export const App: React.FC = () => {
         } catch (error) {
             console.error("Failed to create deck:", error);
             // Navigate back to the wizard on failure
-            navigate('/create-deck');
+            navigate('/pitch-deck');
         }
     };
 
@@ -309,22 +310,23 @@ export const App: React.FC = () => {
 
     return (
         <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/create-deck" element={<WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleCreateDeck} />} />
-            <Route path="/generating" element={<GeneratingScreen />} />
+            {/* Standalone (no layout) Routes */}
+            <Route path="/pitch-deck" element={<WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleCreateDeck} />} />
+            <Route path="/pitch-deck/generating" element={<GeneratingScreen />} />
             
-            <Route path="/events" element={<EventsScreen events={events} onRegisterToggle={handleRegisterToggle} />} />
-            <Route path="/events/:eventId" element={<EventDetailWrapper events={events} onRegisterToggle={handleRegisterToggle} />} />
-            
-            <Route path="/perks" element={<PerksScreen perks={perks} />} />
-            <Route path="/perks/:perkId" element={<PerkDetailWrapper perks={perks} />} />
-
-            <Route path="/jobs" element={<JobBoardScreen jobs={jobs} />} />
-            <Route path="/jobs/post" element={<PostAJobScreen />} />
-            <Route path="/jobs/:jobId/apply" element={<ApplyWrapper jobs={jobs} />} />
-            <Route path="/jobs/:jobId/apply/success" element={<ApplySuccessWrapper jobs={jobs} />} />
-            <Route path="/blog" element={<BlogScreen articles={articles} />} />
+            {/* Public Routes with consistent layout */}
+            <Route element={<PublicLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/events" element={<EventsScreen events={events} onRegisterToggle={handleRegisterToggle} />} />
+                <Route path="/events/:eventId" element={<EventDetailWrapper events={events} onRegisterToggle={handleRegisterToggle} />} />
+                <Route path="/perks" element={<PerksScreen perks={perks} />} />
+                <Route path="/perks/:perkId" element={<PerkDetailWrapper perks={perks} />} />
+                <Route path="/jobs" element={<JobBoardScreen jobs={jobs} />} />
+                <Route path="/jobs/post" element={<PostAJobScreen />} />
+                <Route path="/jobs/:jobId/apply" element={<ApplyWrapper jobs={jobs} />} />
+                <Route path="/jobs/:jobId/apply/success" element={<ApplySuccessWrapper jobs={jobs} />} />
+                <Route path="/blog" element={<BlogScreen articles={articles} />} />
+            </Route>
 
             {/* Authenticated Dashboard Routes */}
             <Route path="/dashboard" element={<DashboardLayout />}>

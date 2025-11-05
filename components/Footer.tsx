@@ -19,7 +19,7 @@ const Footer: React.FC<FooterProps> = () => {
             <div>
                 <h3 className="font-bold text-gray-300">Product</h3>
                 <ul className="mt-4 space-y-2">
-                    <li><Link to="/create-deck" className="text-gray-400 hover:text-white text-sm">Create Deck</Link></li>
+                    <li><Link to="/pitch-deck" className="text-gray-400 hover:text-white text-sm">Create Deck</Link></li>
                     <li><Link to="/dashboard" className="text-gray-400 hover:text-white text-sm">Dashboard</Link></li>
                     <li><Link to="/profile" className="text-gray-400 hover:text-white text-sm">Profile</Link></li>
                     <li><Link to="/perks" className="text-gray-400 hover:text-white text-sm">Perks</Link></li>

@@ -81,7 +81,7 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs }) => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
             {/* Header */}
             <div className="text-center mb-12">
                 <h1 className="text-4xl md:text-5xl font-bold text-amo-dark">Job Board</h1>

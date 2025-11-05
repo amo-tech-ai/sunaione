@@ -13,33 +13,8 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ eventId, events, 
     const navigate = useNavigate();
     const event = events.find(e => e.id === eventId);
 
-    if (!event) {
-        return (
-            <div>
-                <button onClick={() => navigate('/events')} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
-                    <ChevronLeftIcon className="w-5 h-5" />
-                    Back to All Events
-                </button>
-                <h1 className="text-2xl font-bold">Event not found</h1>
-            </div>
-        );
-    }
-
-    const registrationPercentage = (event.registeredCount / event.totalSpots) * 100;
-
-    const getButtonState = () => {
-        if (event.status !== 'Upcoming') {
-            return { text: 'Event Closed', disabled: true, className: 'bg-gray-500 cursor-not-allowed' };
-        }
-        if (event.registered) {
-            return { text: 'Unregister', disabled: false, className: 'bg-gray-600 hover:bg-gray-700' };
-        }
-        return { text: 'Register for this Event', disabled: false, className: 'bg-amo-orange hover:bg-opacity-90' };
-    };
-    const buttonState = getButtonState();
-
-    return (
-        <div>
+    const mainContent = event ? (
+        <>
             <button onClick={() => navigate('/events')} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
                 <ChevronLeftIcon className="w-5 h-5" />
                 Back to All Events
@@ -107,21 +82,35 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ eventId, events, 
                             <div>
                                 <p className="font-semibold">{event.registeredCount} / {event.totalSpots} Registered</p>
                                 <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-                                    <div className="bg-amo-orange h-2.5 rounded-full" style={{ width: `${registrationPercentage}%` }}></div>
+                                    <div className="bg-amo-orange h-2.5 rounded-full" style={{ width: `${(event.registeredCount / event.totalSpots) * 100}%` }}></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <button 
-                        className={`w-full mt-6 text-white font-bold py-3 rounded-lg shadow-md transition-all ${buttonState.className}`}
-                        disabled={buttonState.disabled}
+                        className={`w-full mt-6 text-white font-bold py-3 rounded-lg shadow-md transition-all ${event.status !== 'Upcoming' ? 'bg-gray-500 cursor-not-allowed' : (event.registered ? 'bg-gray-600 hover:bg-gray-700' : 'bg-amo-orange hover:bg-opacity-90')}`}
+                        disabled={event.status !== 'Upcoming'}
                         onClick={() => onRegisterToggle(event.id)}
                     >
-                        {buttonState.text}
+                        {event.status !== 'Upcoming' ? 'Event Closed' : (event.registered ? 'Unregister' : 'Register for this Event')}
                     </button>
                 </aside>
             </div>
+        </>
+    ) : (
+        <>
+            <button onClick={() => navigate('/events')} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
+                <ChevronLeftIcon className="w-5 h-5" />
+                Back to All Events
+            </button>
+            <h1 className="text-2xl font-bold">Event not found</h1>
+        </>
+    );
+
+    return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+            {mainContent}
         </div>
     );
 };

@@ -1,6 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { PublicHeader } from './HomePage';
-import Footer from '../components/Footer';
 import { 
     DocumentDuplicateIcon, CogIcon, CheckCircleIcon, GlobeAltIcon, 
     UsersIcon, ChartBarIcon, ArrowRightIcon, ImageIcon 
@@ -67,9 +65,7 @@ const PostAJobScreen: React.FC<PostAJobScreenProps> = () => {
   ];
 
   return (
-    <div className="bg-amo-beige">
-      <PublicHeader />
-      <main className="pt-24 pb-16">
+      <div className="pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <header className="text-center pt-8 pb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-amo-dark">Post a Job on AMO AI</h1>
@@ -190,9 +186,7 @@ const PostAJobScreen: React.FC<PostAJobScreenProps> = () => {
                 </button>
            </div>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
   );
 };
 

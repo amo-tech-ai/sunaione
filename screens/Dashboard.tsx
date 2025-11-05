@@ -98,7 +98,7 @@ const Dashboard: React.FC<DashboardProps> = ({ decks, onSelectDeck, onDeleteDeck
   const navigate = useNavigate();
 
   const handleStartDeck = () => {
-    navigate('/create-deck');
+    navigate('/pitch-deck');
   };
 
   const filteredDecks = useMemo(() => 

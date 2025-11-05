@@ -164,7 +164,7 @@ const PerkDetailScreen: React.FC<PerkDetailScreenProps> = ({ perkId, allPerks })
                  <h2 className="text-3xl font-bold text-amo-dark">Ready to unlock all founder perks?</h2>
                  <p className="text-lg text-gray-700 mt-2 mb-6">Join hundreds of startups saving thousands with AMO AI.</p>
                  <button 
-                     onClick={() => navigate('/create-deck')}
+                     onClick={() => navigate('/pitch-deck')}
                      className="bg-amo-dark text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-black transition-all"
                  >
                      Join Free & Claim Your Perks

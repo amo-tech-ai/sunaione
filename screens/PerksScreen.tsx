@@ -1,8 +1,6 @@
 import React from 'react';
 import { Perk } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { PublicHeader } from './HomePage';
-import Footer from '../components/Footer';
 
 const PerkCard: React.FC<{ perk: Perk; onViewDetails: (id: string) => void; }> = ({ perk, onViewDetails }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col group transition-all hover:shadow-lg hover:-translate-y-1">
@@ -38,22 +36,18 @@ const PerksScreen: React.FC<{ perks: Perk[] }> = ({ perks }) => {
     };
     
     return (
-        <div className="bg-amo-beige min-h-screen">
-            <PublicHeader />
-            <main className="pt-24 pb-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mb-8 text-center">
-                        <h1 className="text-4xl font-bold text-amo-dark">Startup Perks</h1>
-                        <p className="text-gray-600 mt-1">Exclusive deals and credits from our partners to help you grow.</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {perks.map(perk => (
-                            <PerkCard key={perk.id} perk={perk} onViewDetails={onViewDetails} />
-                        ))}
-                    </div>
+        <div className="pb-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="mb-8 text-center">
+                    <h1 className="text-4xl font-bold text-amo-dark">Startup Perks</h1>
+                    <p className="text-gray-600 mt-1">Exclusive deals and credits from our partners to help you grow.</p>
                 </div>
-            </main>
-            <Footer />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {perks.map(perk => (
+                        <PerkCard key={perk.id} perk={perk} onViewDetails={onViewDetails} />
+                    ))}
+                </div>
+            </div>
         </div>
     );
 };

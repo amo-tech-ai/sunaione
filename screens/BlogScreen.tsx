@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Article } from '../types';
-import { PublicHeader } from './HomePage';
-import Footer from '../components/Footer';
 import { SearchIcon, ArrowRightIcon } from '../components/Icons';
 import { useNavigate } from 'react-router-dom';
 
@@ -79,7 +77,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles }) => {
     });
 
     return (
-        <div className="bg-amo-beige">
+        <>
             <style>{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: translateY(10px); }
@@ -89,81 +87,77 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles }) => {
                     animation: fade-in 0.5s ease-out forwards;
                 }
             `}</style>
-            <PublicHeader />
-            <main className="pt-24">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                    {/* Header */}
-                    <header className="text-center mb-12">
-                        <h1 className="text-4xl md:text-5xl font-bold text-amo-dark">Blog</h1>
-                        <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">Insights, tutorials, and stories from the AMO AI startup community.</p>
-                    </header>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                {/* Header */}
+                <header className="text-center mb-12">
+                    <h1 className="text-4xl md:text-5xl font-bold text-amo-dark">Blog</h1>
+                    <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">Insights, tutorials, and stories from the AMO AI startup community.</p>
+                </header>
 
-                    {/* Search and Filters */}
-                    <section aria-label="Search and filter articles" className="my-8 max-w-4xl mx-auto">
-                        <div className="relative">
-                            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <input
-                                type="search"
-                                aria-label="Search articles"
-                                placeholder="Search articles, topics, or founders…"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
-                            />
-                        </div>
-                        <div role="tablist" aria-label="Article categories" className="mt-4 flex flex-wrap justify-center gap-2">
-                            {categories.map(category => (
-                                <button
-                                    key={category}
-                                    role="tab"
-                                    aria-selected={activeCategory === category}
-                                    onClick={() => setActiveCategory(category)}
-                                    className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${
-                                        activeCategory === category
-                                            ? 'bg-amo-orange text-white'
-                                            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
-                                    }`}
-                                >
-                                    {category}
-                                </button>
+                {/* Search and Filters */}
+                <section aria-label="Search and filter articles" className="my-8 max-w-4xl mx-auto">
+                    <div className="relative">
+                        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                            type="search"
+                            aria-label="Search articles"
+                            placeholder="Search articles, topics, or founders…"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
+                        />
+                    </div>
+                    <div role="tablist" aria-label="Article categories" className="mt-4 flex flex-wrap justify-center gap-2">
+                        {categories.map(category => (
+                            <button
+                                key={category}
+                                role="tab"
+                                aria-selected={activeCategory === category}
+                                onClick={() => setActiveCategory(category)}
+                                className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${
+                                    activeCategory === category
+                                        ? 'bg-amo-orange text-white'
+                                        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                                }`}
+                            >
+                                {category}
+                            </button>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Featured Article */}
+                {featuredArticle && activeCategory === 'All' && searchQuery === '' && (
+                    <section aria-label="Featured article" className="my-16">
+                        <FeaturedArticleCard article={featuredArticle} />
+                    </section>
+                )}
+
+                {/* Article Grid */}
+                <section aria-labelledby="latest-articles-heading" className="my-16">
+                    <h2 id="latest-articles-heading" className="text-3xl font-bold text-amo-dark mb-8">{activeCategory === 'All' ? 'Latest from the Community' : `Showing articles in "${activeCategory}"`}</h2>
+                    {filteredArticles.length > 0 ? (
+                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredArticles.map(article => (
+                                <ArticleCard key={article.id} article={article} />
                             ))}
                         </div>
-                    </section>
-
-                    {/* Featured Article */}
-                    {featuredArticle && activeCategory === 'All' && searchQuery === '' && (
-                        <section aria-label="Featured article" className="my-16">
-                            <FeaturedArticleCard article={featuredArticle} />
-                        </section>
+                    ) : (
+                        <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+                            <h3 className="text-xl font-bold text-amo-dark">No articles found</h3>
+                            <p className="text-gray-600 mt-2">Try adjusting your search or filters.</p>
+                        </div>
                     )}
+                </section>
 
-                    {/* Article Grid */}
-                    <section aria-labelledby="latest-articles-heading" className="my-16">
-                        <h2 id="latest-articles-heading" className="text-3xl font-bold text-amo-dark mb-8">{activeCategory === 'All' ? 'Latest from the Community' : `Showing articles in "${activeCategory}"`}</h2>
-                        {filteredArticles.length > 0 ? (
-                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {filteredArticles.map(article => (
-                                    <ArticleCard key={article.id} article={article} />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
-                                <h3 className="text-xl font-bold text-amo-dark">No articles found</h3>
-                                <p className="text-gray-600 mt-2">Try adjusting your search or filters.</p>
-                            </div>
-                        )}
-                    </section>
-
-                    {/* Pagination */}
-                    <nav aria-label="Pagination" className="my-16 flex justify-center items-center gap-4 text-sm font-medium">
-                        <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled>← Previous</button>
-                        <span className="px-4 py-2 rounded-lg bg-orange-100 text-amo-orange" aria-current="page">Page 1 of 5</span>
-                        <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100">Next →</button>
-                    </nav>
-                </div>
-            </main>
-            <Footer />
-        </div>
+                {/* Pagination */}
+                <nav aria-label="Pagination" className="my-16 flex justify-center items-center gap-4 text-sm font-medium">
+                    <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled>← Previous</button>
+                    <span className="px-4 py-2 rounded-lg bg-orange-100 text-amo-orange" aria-current="page">Page 1 of 5</span>
+                    <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100">Next →</button>
+                </nav>
+            </div>
+        </>
     );
 };
 
