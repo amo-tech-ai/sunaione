@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Deck, Slide } from '../types';
-import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon, XMarkIcon } from '../components/Icons';
+import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon, XMarkIcon, PaperAirplaneIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
-import { generateSlideImage, generateSlideSuggestions } from '../services/geminiService';
+import { generateSlideImage, generateSlideSuggestions, invokeEditorAgent } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
+import { deckService } from '../services/deckService';
 
 interface DeckEditorProps {
     deck: Deck;
@@ -44,6 +45,67 @@ const SuggestionBox: React.FC<{
                 <button onClick={onReject} className="text-sm font-semibold text-gray-600 px-3 py-1 rounded-md hover:bg-gray-200">Reject</button>
                 <button onClick={onAccept} className="text-sm font-semibold text-white bg-green-600 px-3 py-1 rounded-md hover:bg-green-700">Accept</button>
             </div>
+        </div>
+    );
+};
+
+const AICopilot: React.FC<{
+    deckId: string;
+    onCommandSuccess: () => void;
+}> = ({ deckId, onCommandSuccess }) => {
+    const [command, setCommand] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!command.trim() || isLoading) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            await invokeEditorAgent(deckId, command);
+            onCommandSuccess();
+            setCommand('');
+        } catch (err) {
+            console.error(err);
+            setError("Sorry, I couldn't complete that command. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-xl font-bold text-amo-dark mb-4 flex items-center gap-2">
+                <SparklesIcon className="w-6 h-6 text-amo-orange" />
+                AI Copilot
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+                Edit your deck with natural language. Try: "Add a new slide about our team" or "Change the title of this slide to 'Our Vision'".
+            </p>
+            <form onSubmit={handleSubmit}>
+                <div className="relative">
+                    <input
+                        type="text"
+                        value={command}
+                        onChange={(e) => setCommand(e.target.value)}
+                        placeholder="Tell me what to do..."
+                        disabled={isLoading}
+                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amo-orange"
+                    />
+                    <button
+                        type="submit"
+                        disabled={isLoading || !command.trim()}
+                        aria-label={isLoading ? "Processing command" : "Submit command"}
+                        className="absolute top-1/2 right-2 -translate-y-1/2 p-2 rounded-full bg-amo-dark hover:bg-black text-white disabled:bg-gray-400 transition-colors"
+                    >
+                        {isLoading ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <PaperAirplaneIcon className="w-5 h-5" />}
+                    </button>
+                </div>
+                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            </form>
         </div>
     );
 };
@@ -170,6 +232,17 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         const newSlides = [...localDeck.slides, newSlide];
         setLocalDeck({ ...localDeck, slides: newSlides });
         setActiveSlide(newSlides.length - 1);
+    };
+
+    const refreshDeck = async () => {
+        const refreshedDeck = await deckService.getDeckById(deck.id);
+        if (refreshedDeck) {
+            setLocalDeck(refreshedDeck);
+            // Ensure active slide is not out of bounds after a delete
+            if (activeSlide >= refreshedDeck.slides.length) {
+                setActiveSlide(Math.max(0, refreshedDeck.slides.length - 1));
+            }
+        }
     };
 
     const currentSlide = localDeck.slides[activeSlide];
@@ -304,6 +377,8 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                                 {currentSlide.imageLoading ? 'Generating...' : currentSlide.image ? 'Regenerate Image' : 'Generate Image with AI'}
                             </button>
                         </div>
+
+                        <AICopilot deckId={localDeck.id} onCommandSuccess={refreshDeck} />
                     </div>
                 </div>
             </main>

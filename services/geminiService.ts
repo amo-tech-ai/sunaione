@@ -50,5 +50,20 @@ export const generateSlideImage = async (slideTitle: string, slideContent: strin
     return data.imageUrl;
 };
 
+export const invokeEditorAgent = async (deckId: string, command: string): Promise<void> => {
+  const { error } = await supabase.functions.invoke('invoke-editor-agent', {
+    body: { deckId, command },
+  });
+
+  if (error) {
+    console.error(`Error invoking editor agent for deck ${deckId}:`, error);
+    throw error;
+  }
+
+  // The function doesn't need to return data, as we'll refetch the deck state
+  // on the client for simplicity and to ensure data consistency.
+};
+
+
 // The `generateDeck` function is handled by the `create-deck-with-images` Edge Function,
 // which is invoked directly from App.tsx. It is no longer needed in this client-side service.
