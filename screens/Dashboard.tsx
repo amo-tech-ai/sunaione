@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Deck } from '../types';
 import { ArrowRightIcon, DocumentDuplicateIcon, SparklesIcon, SearchIcon, DotsVerticalIcon, TrashIcon, LoaderIcon } from '../components/Icons';
 import OnboardingTour from '../components/OnboardingTour';
@@ -15,11 +15,11 @@ interface DashboardProps {
 }
 
 const DeckCardMenu: React.FC<{ onDuplicate: () => void; onDelete: () => void; }> = ({ onDuplicate, onDelete }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const menuRef = React.useRef<HTMLDivElement>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     // Close menu when clicking outside
-    React.useEffect(() => {
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
@@ -101,12 +101,12 @@ const tourSteps = [
 ];
 
 const Dashboard: React.FC<DashboardProps> = ({ decks, isLoading, error, onSelectDeck, onDeleteDeck, onDuplicateDeck }) => {
-  const [isTourOpen, setIsTourOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [deckToDelete, setDeckToDelete] = React.useState<Deck | null>(null);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
   const navigate = useNavigate();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoading && decks.length === 0) {
         setIsTourOpen(true);
     }
@@ -116,7 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({ decks, isLoading, error, onSelect
     navigate('/pitch-deck');
   };
 
-  const filteredDecks = React.useMemo(() => 
+  const filteredDecks = useMemo(() => 
     decks.filter(deck => 
         deck.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).sort((a, b) => b.lastEdited - a.lastEdited), 
