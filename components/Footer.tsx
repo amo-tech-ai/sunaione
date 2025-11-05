@@ -1,9 +1,9 @@
 import React from 'react';
-import { Screen } from '../types';
+import { Link } from 'react-router-dom';
 import { TwitterIcon, LinkedInIcon, GitHubIcon } from './Icons';
 
 interface FooterProps {
-  onNavigate: (screen: Screen) => void;
+  navigate: (path: string) => void;
 }
 
 const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
@@ -18,7 +18,7 @@ const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 
-const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+const Footer: React.FC<FooterProps> = ({ navigate }) => {
   return (
     <footer className="bg-amo-dark text-white">
       <div className="max-w-7xl mx-auto py-12 px-8">
@@ -32,20 +32,20 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <div>
                 <h3 className="font-bold text-gray-300">Product</h3>
                 <ul className="mt-4 space-y-2">
-                    <li><button onClick={() => onNavigate(Screen.Welcome)} className="text-gray-400 hover:text-white text-sm">Create Deck</button></li>
-                    <li><button onClick={() => onNavigate(Screen.Dashboard)} className="text-gray-400 hover:text-white text-sm">Dashboard</button></li>
-                    <li><button onClick={() => onNavigate(Screen.Profile)} className="text-gray-400 hover:text-white text-sm">Profile</button></li>
-                    <li><button onClick={() => onNavigate(Screen.Perks)} className="text-gray-400 hover:text-white text-sm">Perks</button></li>
+                    <li><Link to="/create-deck" className="text-gray-400 hover:text-white text-sm">Create Deck</Link></li>
+                    <li><Link to="/dashboard" className="text-gray-400 hover:text-white text-sm">Dashboard</Link></li>
+                    <li><Link to="/profile" className="text-gray-400 hover:text-white text-sm">Profile</Link></li>
+                    <li><Link to="/perks" className="text-gray-400 hover:text-white text-sm">Perks</Link></li>
                 </ul>
             </div>
             <div>
                  <h3 className="font-bold text-gray-300">Community</h3>
                  <ul className="mt-4 space-y-2">
-                    <li><button onClick={() => onNavigate(Screen.Events)} className="text-gray-400 hover:text-white text-sm">Events</button></li>
-                    <li><button onClick={() => onNavigate(Screen.MyEvents)} className="text-gray-400 hover:text-white text-sm">My Events</button></li>
-                    <li><button onClick={() => onNavigate(Screen.Blog)} className="text-gray-400 hover:text-white text-sm">Blog</button></li>
-                    <li><button onClick={() => onNavigate(Screen.JobBoard)} className="text-gray-400 hover:text-white text-sm">Job Board</button></li>
-                    <li><button onClick={() => onNavigate(Screen.PostAJob)} className="text-gray-400 hover:text-white text-sm">Post a Job</button></li>
+                    <li><Link to="/events" className="text-gray-400 hover:text-white text-sm">Events</Link></li>
+                    <li><Link to="/my-events" className="text-gray-400 hover:text-white text-sm">My Events</Link></li>
+                    <li><Link to="/blog" className="text-gray-400 hover:text-white text-sm">Blog</Link></li>
+                    <li><Link to="/jobs" className="text-gray-400 hover:text-white text-sm">Job Board</Link></li>
+                    <li><Link to="/jobs/post" className="text-gray-400 hover:text-white text-sm">Post a Job</Link></li>
                  </ul>
             </div>
         </div>

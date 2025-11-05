@@ -1,22 +1,22 @@
-
 import React from 'react';
-import { Screen, Event } from '../types';
+import { Event } from '../types';
 import { ChevronLeftIcon, CalendarIcon, MapPinIcon, UsersIcon } from '../components/Icons';
+import { NavigateFunction } from 'react-router-dom';
 
 interface EventDetailScreenProps {
     eventId: string;
-    setCurrentScreen: (screen: Screen) => void;
+    navigate: NavigateFunction;
     events: Event[];
     onRegisterToggle: (eventId: string) => void;
 }
 
-const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ eventId, setCurrentScreen, events, onRegisterToggle }) => {
+const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ eventId, navigate, events, onRegisterToggle }) => {
     const event = events.find(e => e.id === eventId);
 
     if (!event) {
         return (
             <div>
-                <button onClick={() => setCurrentScreen(Screen.Events)} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
+                <button onClick={() => navigate('/events')} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
                     <ChevronLeftIcon className="w-5 h-5" />
                     Back to All Events
                 </button>
@@ -40,7 +40,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ eventId, setCurre
 
     return (
         <div>
-            <button onClick={() => setCurrentScreen(Screen.Events)} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
+            <button onClick={() => navigate('/events')} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
                 <ChevronLeftIcon className="w-5 h-5" />
                 Back to All Events
             </button>

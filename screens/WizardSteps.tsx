@@ -1,21 +1,24 @@
-
 import React, { useState } from 'react';
 import WizardScreen from '../components/WizardScreen';
-import { Screen, DeckData, TemplateID } from '../types';
+import { DeckData, TemplateID } from '../types';
 import { refineText } from '../services/geminiService';
 import { SparklesIcon, LoaderIcon } from '../components/Icons';
+import { NavigateFunction } from 'react-router-dom';
 
 interface WizardStepsProps {
   deckData: DeckData;
   setDeckData: React.Dispatch<React.SetStateAction<DeckData>>;
   onFinish: () => void;
+  navigate: NavigateFunction;
 }
 
-const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFinish }) => {
-  const [step, setStep] = useState<Screen>(Screen.Welcome);
+type WizardStep = 'Welcome' | 'Problem' | 'Market' | 'Traction' | 'Ask';
+
+const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFinish, navigate }) => {
+  const [step, setStep] = useState<WizardStep>('Welcome');
   const [refiningField, setRefiningField] = useState<string | null>(null);
 
-  const totalSteps = 6; // Welcome doesn't count for progress
+  const totalSteps = 5;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -32,7 +35,6 @@ const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFini
       setDeckData(prev => ({ ...prev, [fieldName]: refinedText }));
     } catch (error) {
       console.error("Failed to refine text:", error);
-      // Optionally show an error to the user
     } finally {
       setRefiningField(null);
     }
@@ -40,20 +42,21 @@ const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFini
 
   const nextStep = () => {
     switch (step) {
-      case Screen.Welcome: setStep(Screen.Problem); break;
-      case Screen.Problem: setStep(Screen.Market); break;
-      case Screen.Market: setStep(Screen.Traction); break;
-      case Screen.Traction: setStep(Screen.Ask); break;
-      case Screen.Ask: onFinish(); break;
+      case 'Welcome': setStep('Problem'); break;
+      case 'Problem': setStep('Market'); break;
+      case 'Market': setStep('Traction'); break;
+      case 'Traction': setStep('Ask'); break;
+      case 'Ask': onFinish(); break;
     }
   };
 
   const prevStep = () => {
     switch (step) {
-      case Screen.Problem: setStep(Screen.Welcome); break;
-      case Screen.Market: setStep(Screen.Problem); break;
-      case Screen.Traction: setStep(Screen.Market); break;
-      case Screen.Ask: setStep(Screen.Traction); break;
+      case 'Problem': setStep('Welcome'); break;
+      case 'Market': setStep('Problem'); break;
+      case 'Traction': setStep('Market'); break;
+      case 'Ask': setStep('Traction'); break;
+      default: navigate('/dashboard'); break;
     }
   };
 
@@ -71,10 +74,13 @@ const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFini
       {refiningField === fieldName ? 'Refining...' : label}
     </button>
   );
+  
+  const currentStepNumber = { 'Welcome': 1, 'Problem': 2, 'Market': 3, 'Traction': 4, 'Ask': 5 }[step];
 
-  if (step === Screen.Welcome) {
+
+  if (step === 'Welcome') {
     return (
-      <WizardScreen title="Let's build your pitch deck." subtitle="We'll guide you through the key sections investors want to see. It'll be quick and easy." currentStep={1} totalSteps={totalSteps} onNext={nextStep} onBack={() => {}} canGoNext={!!deckData.companyName}>
+      <WizardScreen title="Let's build your pitch deck." subtitle="We'll guide you through the key sections investors want to see. It'll be quick and easy." currentStep={currentStepNumber} totalSteps={totalSteps} onNext={nextStep} onBack={() => navigate('/dashboard')} canGoNext={!!deckData.companyName}>
         <div className="relative">
           <label htmlFor="companyName" className="block text-lg font-medium text-gray-700 mb-2">What is your company's name?</label>
           <input type="text" name="companyName" id="companyName" value={deckData.companyName} onChange={handleInputChange} className="w-full p-3 border border-gray-300 rounded-md text-lg focus:ring-2 focus:ring-amo-orange focus:border-transparent transition" placeholder="e.g., Innovate Inc." />
@@ -82,9 +88,9 @@ const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFini
       </WizardScreen>
     );
   }
-  if (step === Screen.Problem) {
+  if (step === 'Problem') {
     return (
-      <WizardScreen title="The Problem" subtitle="Clearly define the problem you're solving. What is the pain point for your customers?" currentStep={2} totalSteps={totalSteps} onNext={nextStep} onBack={prevStep} canGoNext={!!deckData.problem && !!deckData.solution}>
+      <WizardScreen title="The Problem" subtitle="Clearly define the problem you're solving. What is the pain point for your customers?" currentStep={currentStepNumber} totalSteps={totalSteps} onNext={nextStep} onBack={prevStep} canGoNext={!!deckData.problem && !!deckData.solution}>
         <div className="relative">
           <label htmlFor="problem" className="block text-lg font-medium text-gray-700 mb-2">What problem are you solving?</label>
           <textarea name="problem" id="problem" rows={4} value={deckData.problem} onChange={handleInputChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition" placeholder="Describe the current pain point, inefficiency, or gap in the market."></textarea>
@@ -98,9 +104,9 @@ const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFini
       </WizardScreen>
     );
   }
-  if (step === Screen.Market) {
+  if (step === 'Market') {
     return (
-      <WizardScreen title="Market & Model" subtitle="Who are your customers and how will you make money?" currentStep={3} totalSteps={totalSteps} onNext={nextStep} onBack={prevStep} canGoNext={!!deckData.targetAudience && !!deckData.businessModel}>
+      <WizardScreen title="Market & Model" subtitle="Who are your customers and how will you make money?" currentStep={currentStepNumber} totalSteps={totalSteps} onNext={nextStep} onBack={prevStep} canGoNext={!!deckData.targetAudience && !!deckData.businessModel}>
         <div className="relative">
           <label htmlFor="targetAudience" className="block text-lg font-medium text-gray-700 mb-2">Who is your target audience?</label>
           <textarea name="targetAudience" id="targetAudience" rows={4} value={deckData.targetAudience} onChange={handleInputChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition" placeholder="e.g., 'Small to medium-sized e-commerce businesses struggling with logistics' or 'Millennials in urban areas looking for sustainable food options.'"></textarea>
@@ -114,9 +120,9 @@ const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFini
       </WizardScreen>
     );
   }
-  if (step === Screen.Traction) {
+  if (step === 'Traction') {
     return (
-      <WizardScreen title="Traction & Team" subtitle="Show what you've achieved and who is behind the vision." currentStep={4} totalSteps={totalSteps} onNext={nextStep} onBack={prevStep} canGoNext={!!deckData.traction && !!deckData.teamMembers}>
+      <WizardScreen title="Traction & Team" subtitle="Show what you've achieved and who is behind the vision." currentStep={currentStepNumber} totalSteps={totalSteps} onNext={nextStep} onBack={prevStep} canGoNext={!!deckData.traction && !!deckData.teamMembers}>
         <div className="relative">
           <label htmlFor="traction" className="block text-lg font-medium text-gray-700 mb-2">What's your key traction?</label>
           <textarea name="traction" id="traction" rows={4} value={deckData.traction} onChange={handleInputChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition" placeholder="Mention key metrics: e.g., '10,000 active users', '$50k in monthly recurring revenue', 'Signed 5 pilot customers including...'"></textarea>
@@ -130,9 +136,9 @@ const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFini
       </WizardScreen>
     );
   }
-  if (step === Screen.Ask) {
+  if (step === 'Ask') {
     return (
-      <WizardScreen title="The Ask" subtitle="How much are you raising and what will you use it for?" currentStep={5} totalSteps={totalSteps} onNext={nextStep} onBack={prevStep} canGoNext={!!deckData.fundingAmount && !!deckData.useOfFunds} isLastStep>
+      <WizardScreen title="The Ask" subtitle="How much are you raising and what will you use it for?" currentStep={currentStepNumber} totalSteps={totalSteps} onNext={nextStep} onBack={prevStep} canGoNext={!!deckData.fundingAmount && !!deckData.useOfFunds} isLastStep>
         <div className="relative">
           <label htmlFor="fundingAmount" className="block text-lg font-medium text-gray-700 mb-2">How much funding are you seeking?</label>
           <input type="text" name="fundingAmount" id="fundingAmount" value={deckData.fundingAmount} onChange={handleInputChange} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition" placeholder="e.g., $500,000" />

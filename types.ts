@@ -1,28 +1,4 @@
 // Fix: Replaced incorrect component code with actual type definitions.
-export enum Screen {
-  Home = 'Home',
-  Welcome = 'Welcome',
-  Problem = 'Problem',
-  Market = 'Market',
-  Traction = 'Traction',
-  Ask = 'Ask',
-  Generating = 'Generating',
-  DeckEditor = 'DeckEditor',
-  Dashboard = 'Dashboard',
-  Presentation = 'Presentation',
-  Profile = 'Profile',
-  Events = 'Events',
-  EventDetail = 'EventDetail',
-  MyEvents = 'MyEvents',
-  Perks = 'Perks',
-  PerkDetail = 'PerkDetail',
-  JobBoard = 'JobBoard',
-  PostAJob = 'PostAJob',
-  Blog = 'Blog',
-  Apply = 'Apply',
-  ApplySuccess = 'ApplySuccess',
-}
-
 export interface Slide {
   title: string;
   content: string[];

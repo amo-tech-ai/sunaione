@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
-import { Screen, Deck } from '../types';
+import { Deck } from '../types';
 import { ArrowRightIcon, DocumentDuplicateIcon, SparklesIcon } from '../components/Icons';
 import OnboardingTour from '../components/OnboardingTour';
+import { NavigateFunction } from 'react-router-dom';
 
 interface DashboardProps {
   decks: Deck[];
-  setCurrentScreen: (screen: Screen) => void;
+  navigate: NavigateFunction;
   onSelectDeck: (deckId: string) => void;
 }
 
@@ -50,11 +50,11 @@ const tourSteps = [
     { title: 'Manage Your Decks', content: 'Your created decks will appear here. You can edit, present, and share them anytime.' },
 ];
 
-const Dashboard: React.FC<DashboardProps> = ({ decks, setCurrentScreen, onSelectDeck }) => {
+const Dashboard: React.FC<DashboardProps> = ({ decks, navigate, onSelectDeck }) => {
   const [isTourOpen, setIsTourOpen] = useState(decks.length === 0);
 
   const handleStartDeck = () => {
-    setCurrentScreen(Screen.Welcome);
+    navigate('/create-deck');
   };
   
   return (

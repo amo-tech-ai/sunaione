@@ -1,12 +1,6 @@
-
 import React from 'react';
-import { Perk, Screen } from '../types';
-import { ArrowRightIcon, SparklesIcon } from '../components/Icons';
-
-interface PerksScreenProps {
-    perks: Perk[];
-    onViewDetails: (perkId: string) => void;
-}
+import { Perk } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 const PerkCard: React.FC<{ perk: Perk; onViewDetails: (id: string) => void; }> = ({ perk, onViewDetails }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col group transition-all hover:shadow-lg hover:-translate-y-1">
@@ -35,7 +29,12 @@ const PerkCard: React.FC<{ perk: Perk; onViewDetails: (id: string) => void; }> =
 );
 
 
-const PerksScreen: React.FC<PerksScreenProps> = ({ perks, onViewDetails }) => {
+const PerksScreen: React.FC<{ perks: Perk[] }> = ({ perks }) => {
+    const navigate = useNavigate();
+    const onViewDetails = (perkId: string) => {
+        navigate(`/perks/${perkId}`);
+    };
+    
     return (
         <div>
             <div className="mb-8">

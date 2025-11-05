@@ -1,13 +1,12 @@
-
 import React from 'react';
-import { Screen, Perk } from '../types';
+import { Perk } from '../types';
 import { ChevronLeftIcon, LightBulbIcon, PuzzlePieceIcon, CogIcon, CheckCircleIcon } from '../components/Icons';
+import { NavigateFunction } from 'react-router-dom';
 
 interface PerkDetailScreenProps {
     perkId: string;
     allPerks: Perk[];
-    setCurrentScreen: (screen: Screen) => void;
-    onViewDetails: (perkId: string) => void;
+    navigate: NavigateFunction;
 }
 
 // Reusable card component for this page
@@ -43,13 +42,13 @@ const StepCard: React.FC<{ step: number; title: string; description: string }> =
 );
 
 
-const PerkDetailScreen: React.FC<PerkDetailScreenProps> = ({ perkId, allPerks, setCurrentScreen, onViewDetails }) => {
+const PerkDetailScreen: React.FC<PerkDetailScreenProps> = ({ perkId, allPerks, navigate }) => {
     const perk = allPerks.find(p => p.id === perkId);
 
     if (!perk) {
         return (
             <div>
-                <button onClick={() => setCurrentScreen(Screen.Perks)} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
+                <button onClick={() => navigate('/perks')} className="flex items-center gap-2 text-gray-600 font-semibold mb-6 hover:text-amo-dark transition-colors">
                     <ChevronLeftIcon className="w-5 h-5" />
                     Back to All Perks
                 </button>
@@ -64,9 +63,9 @@ const PerkDetailScreen: React.FC<PerkDetailScreenProps> = ({ perkId, allPerks, s
         <div className="max-w-4xl mx-auto">
             {/* Breadcrumb */}
             <nav className="text-sm text-gray-500 mb-4">
-                <span className="cursor-pointer hover:underline" onClick={() => setCurrentScreen(Screen.Dashboard)}>Dashboard</span>
+                <span className="cursor-pointer hover:underline" onClick={() => navigate('/dashboard')}>Dashboard</span>
                 <span className="mx-2">/</span>
-                <span className="cursor-pointer hover:underline" onClick={() => setCurrentScreen(Screen.Perks)}>Perks</span>
+                <span className="cursor-pointer hover:underline" onClick={() => navigate('/perks')}>Perks</span>
                 <span className="mx-2">/</span>
                 <span className="font-semibold text-gray-700">{perk.partner}</span>
             </nav>
@@ -130,7 +129,7 @@ const PerkDetailScreen: React.FC<PerkDetailScreenProps> = ({ perkId, allPerks, s
                                     <p className="font-bold text-amo-orange text-sm">{p.offer}</p>
                                     <p className="text-xs text-gray-500 mb-3">from {p.partner}</p>
                                     <button 
-                                        onClick={() => onViewDetails(p.id)}
+                                        onClick={() => navigate(`/perks/${p.id}`)}
                                         className="w-full bg-gray-100 text-gray-800 font-semibold py-1.5 rounded-md hover:bg-gray-200 text-xs">
                                         View Perk
                                     </button>
@@ -165,7 +164,7 @@ const PerkDetailScreen: React.FC<PerkDetailScreenProps> = ({ perkId, allPerks, s
                  <h2 className="text-3xl font-bold text-amo-dark">Ready to unlock all founder perks?</h2>
                  <p className="text-lg text-gray-700 mt-2 mb-6">Join hundreds of startups saving thousands with AMO AI.</p>
                  <button 
-                     onClick={() => setCurrentScreen(Screen.Welcome)}
+                     onClick={() => navigate('/create-deck')}
                      className="bg-amo-dark text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-black transition-all"
                  >
                      Join Free & Claim Your Perks

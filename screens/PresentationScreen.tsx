@@ -1,32 +1,32 @@
-
 import React, { useState, useEffect } from 'react';
-import { Deck, Screen } from '../types';
+import { Deck } from '../types';
 import { templateStyles } from '../styles/templates';
+import { NavigateFunction } from 'react-router-dom';
 
 interface PresentationScreenProps {
   deck: Deck;
-  setCurrentScreen: (screen: Screen) => void;
+  navigate: NavigateFunction;
 }
 
-const PresentationScreen: React.FC<PresentationScreenProps> = ({ deck, setCurrentScreen }) => {
+const PresentationScreen: React.FC<PresentationScreenProps> = ({ deck, navigate }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowRight' || e.key === ' ') {
-      setCurrentSlideIndex(prev => Math.min(prev + 1, deck.slides.length - 1));
-    } else if (e.key === 'ArrowLeft') {
-      setCurrentSlideIndex(prev => Math.max(prev - 1, 0));
-    } else if (e.key === 'Escape') {
-      setCurrentScreen(Screen.DeckEditor);
-    }
-  };
-
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        setCurrentSlideIndex(prev => Math.min(prev + 1, deck.slides.length - 1));
+      } else if (e.key === 'ArrowLeft') {
+        setCurrentSlideIndex(prev => Math.max(prev - 1, 0));
+      } else if (e.key === 'Escape') {
+        navigate(`/deck/${deck.id}/edit`);
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [deck.slides.length]);
+  }, [deck.slides.length, deck.id, navigate]);
 
   const currentSlide = deck.slides[currentSlideIndex];
   const style = templateStyles[deck.template || 'startup'];
@@ -51,7 +51,7 @@ const PresentationScreen: React.FC<PresentationScreenProps> = ({ deck, setCurren
       <div className="p-4 bg-gray-100 flex justify-between items-center text-sm">
         <div className="font-bold">{deck.name}</div>
         <div>{currentSlideIndex + 1} / {deck.slides.length}</div>
-        <button onClick={() => setCurrentScreen(Screen.DeckEditor)} className="font-semibold hover:text-amo-orange">Exit Presentation</button>
+        <button onClick={() => navigate(`/deck/${deck.id}/edit`)} className="font-semibold hover:text-amo-orange">Exit Presentation</button>
       </div>
     </div>
   );

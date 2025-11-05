@@ -1,10 +1,10 @@
 import React from 'react';
-import { Screen } from '../types';
 import { LightBulbIcon, CogIcon, PaletteIcon, StarIcon } from '../components/Icons';
 import Footer from '../components/Footer';
+import { NavigateFunction } from 'react-router-dom';
 
 interface HomePageProps {
-  setCurrentScreen: (screen: Screen) => void;
+  navigate: NavigateFunction;
 }
 
 const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
@@ -18,14 +18,13 @@ const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
     </div>
 );
 
-// Fix: Export PublicHeader so it can be used in other screens.
-export const PublicHeader: React.FC<{ onNavigate: (screen: Screen) => void }> = ({ onNavigate }) => (
+export const PublicHeader: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
     <header className="absolute top-0 left-0 right-0 z-10 py-4 px-8 flex justify-between items-center">
-        <button onClick={() => onNavigate(Screen.Home)} aria-label="Home">
+        <button onClick={() => navigate('/')} aria-label="Home">
             <AmoAILogo />
         </button>
         <button
-            onClick={() => onNavigate(Screen.Welcome)}
+            onClick={() => navigate('/create-deck')}
             className="font-semibold text-amo-dark bg-white border border-gray-300 py-2 px-5 rounded-lg hover:bg-gray-100 transition-colors"
         >
             Try it Free Now
@@ -58,12 +57,12 @@ const TestimonialCard: React.FC<{ quote: string, name: string, role: string }> =
     </div>
 );
 
-const HomePage: React.FC<HomePageProps> = ({ setCurrentScreen }) => {
-  const handleCTA = () => setCurrentScreen(Screen.Welcome);
+const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
+  const handleCTA = () => navigate('/create-deck');
   
   return (
     <div className="bg-amo-beige font-sans">
-      <PublicHeader onNavigate={setCurrentScreen} />
+      <PublicHeader navigate={navigate} />
       
       {/* Hero Section */}
       <main className="relative min-h-screen flex flex-col items-center justify-center p-4 pt-24 text-center overflow-hidden">
@@ -202,7 +201,7 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentScreen }) => {
          </div>
       </section>
 
-      <Footer onNavigate={setCurrentScreen} />
+      <Footer navigate={navigate} />
     </div>
   );
 };

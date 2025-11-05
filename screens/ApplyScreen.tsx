@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Screen, Job, JobApplication } from '../types';
+import { Job, JobApplication } from '../types';
 import { PublicHeader } from './HomePage';
 import Footer from '../components/Footer';
 import { 
     ChevronLeftIcon, ArrowRightIcon, DocumentTextIcon, XMarkIcon, 
     UploadIcon, CheckCircleIcon, BriefcaseIcon, MapPinIcon, CurrencyDollarIcon 
 } from '../components/Icons';
+import { NavigateFunction } from 'react-router-dom';
 
 interface ApplyScreenProps {
     job: Job;
     onSuccess: () => void;
-    setCurrentScreen: (screen: Screen) => void;
+    navigate: NavigateFunction;
 }
 
 const initialFormData: JobApplication = {
@@ -25,7 +26,7 @@ const initialFormData: JobApplication = {
     salaryExpectation: '',
 };
 
-const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScreen }) => {
+const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, navigate }) => {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<JobApplication>(initialFormData);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -145,7 +146,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
     
     return (
         <div className="bg-amo-beige font-sans">
-            <PublicHeader onNavigate={setCurrentScreen} />
+            <PublicHeader navigate={navigate} />
             <main className="pt-24 pb-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <header className="mb-8">
@@ -310,7 +311,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                     </div>
                 </div>
             </main>
-            <Footer onNavigate={setCurrentScreen} />
+            <Footer navigate={navigate} />
         </div>
     );
 };

@@ -1,6 +1,8 @@
 
+
 import React from 'react';
-import { Screen, UserProfile, VerificationStatus, Skill, Experience } from '../types';
+// FIX: Removed unused 'Screen' type import.
+import { UserProfile, VerificationStatus, Skill, Experience } from '../types';
 import { 
     UserCircleIcon, SparklesIcon, EyeIcon, UploadIcon, CheckCircleIcon, 
     LinkedInIcon, GitHubIcon, GlobeAltIcon, ExclamationTriangleIcon,

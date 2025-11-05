@@ -1,15 +1,16 @@
 import React from 'react';
-import { Screen, Job } from '../types';
+import { Job } from '../types';
 import { PublicHeader } from './HomePage';
 import Footer from '../components/Footer';
 import { CheckCircleIcon, ArrowRightIcon, DownloadIcon } from '../components/Icons';
+import { NavigateFunction } from 'react-router-dom';
 
 interface ApplySuccessScreenProps {
     job: Job;
-    setCurrentScreen: (screen: Screen) => void;
+    navigate: NavigateFunction;
 }
 
-const ApplySuccessScreen: React.FC<ApplySuccessScreenProps> = ({ job, setCurrentScreen }) => {
+const ApplySuccessScreen: React.FC<ApplySuccessScreenProps> = ({ job, navigate }) => {
     return (
         <div className="bg-amo-beige font-sans min-h-screen flex flex-col">
             <style>{`
@@ -36,7 +37,7 @@ const ApplySuccessScreen: React.FC<ApplySuccessScreenProps> = ({ job, setCurrent
                     100% { transform: translateY(100vh) rotateZ(720deg); opacity: 0; }
                 }
             `}</style>
-            <PublicHeader onNavigate={setCurrentScreen} />
+            <PublicHeader navigate={navigate} />
             <main className="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
                 {Array.from({ length: 10 }).map((_, i) => <div key={i} className="confetti" />)}
                 <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 md:p-12 text-center">
@@ -75,7 +76,7 @@ const ApplySuccessScreen: React.FC<ApplySuccessScreenProps> = ({ job, setCurrent
                     
                     <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                         <button
-                            onClick={() => setCurrentScreen(Screen.JobBoard)}
+                            onClick={() => navigate('/jobs')}
                             className="bg-amo-dark text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2"
                         >
                             Back to Job Board <ArrowRightIcon className="w-4 h-4" />
@@ -89,7 +90,7 @@ const ApplySuccessScreen: React.FC<ApplySuccessScreenProps> = ({ job, setCurrent
                     </div>
                 </div>
             </main>
-            <Footer onNavigate={setCurrentScreen} />
+            <Footer navigate={navigate} />
         </div>
     );
 };

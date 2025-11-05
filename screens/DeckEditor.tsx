@@ -1,17 +1,17 @@
-
 import React, { useState } from 'react';
-import { Deck, Screen, Slide, TemplateID } from '../types';
+import { Deck, Slide } from '../types';
 import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
 import { rewriteSlideContent, generateSlideImage } from '../services/geminiService';
+import { NavigateFunction } from 'react-router-dom';
 
 interface DeckEditorProps {
     deck: Deck;
-    setDeck: React.Dispatch<React.SetStateAction<Deck | null>>;
-    setCurrentScreen: (screen: Screen) => void;
+    setDeck: (deck: Deck | null) => void;
+    navigate: NavigateFunction;
 }
 
-const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, setCurrentScreen }) => {
+const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, navigate }) => {
     const [activeSlide, setActiveSlide] = useState(0);
     const [editingContent, setEditingContent] = useState<string | null>(null);
     const [isRewriting, setIsRewriting] = useState(false);
@@ -67,7 +67,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, setCurrentScreen
             <aside className="w-64 bg-white p-4 overflow-y-auto border-r border-gray-200">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-bold text-lg text-amo-dark">{deck.name}</h2>
-                    <button onClick={() => setCurrentScreen(Screen.Dashboard)} className="text-sm text-gray-500 hover:text-amo-orange">Exit</button>
+                    <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:text-amo-orange">Exit</button>
                 </div>
                 <div className="space-y-2">
                     {deck.slides.map((slide, index) => (
@@ -91,7 +91,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, setCurrentScreen
                         <UserCircleIcon className="w-5 h-5"/> Share
                     </button>
                     <button 
-                        onClick={() => setCurrentScreen(Screen.Presentation)}
+                        onClick={() => navigate(`/deck/${deck.id}/present`)}
                         className="bg-amo-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-black transition-all flex items-center gap-2">
                         <EyeIcon className="w-5 h-5"/> Present
                     </button>

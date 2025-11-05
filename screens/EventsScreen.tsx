@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Event } from '../types';
 import { CalendarIcon, MapPinIcon, UsersIcon } from '../components/Icons';
+import { useNavigate } from 'react-router-dom';
 
 interface EventsScreenProps {
     events: Event[];
-    onViewDetails: (eventId: string) => void;
     onRegisterToggle: (eventId: string) => void;
 }
 
@@ -46,7 +45,12 @@ const EventCard: React.FC<{ event: Event; onViewDetails: (id: string) => void; o
     </div>
 );
 
-const EventsScreen: React.FC<EventsScreenProps> = ({ events, onViewDetails, onRegisterToggle }) => {
+const EventsScreen: React.FC<EventsScreenProps> = ({ events, onRegisterToggle }) => {
+    const navigate = useNavigate();
+    const onViewDetails = (eventId: string) => {
+        navigate(`/events/${eventId}`);
+    };
+
     return (
         <div>
             <div className="mb-8">

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Job, Screen } from '../types';
+import { Job } from '../types';
 import { 
     SearchIcon, MapPinIcon, BriefcaseIcon, CurrencyDollarIcon, 
     RocketIcon, GlobeAltIcon, BeakerIcon 
 } from '../components/Icons';
+import { useNavigate } from 'react-router-dom';
 
 interface JobBoardScreenProps {
     jobs: Job[];
-    setCurrentScreen: (screen: Screen) => void;
-    onStartApply: (jobId: string) => void;
 }
 
 // Updated categories list for multi-select. "All" is now handled by an empty selection.
@@ -54,31 +53,32 @@ const ValueCard: React.FC<{ icon: React.ElementType; title: string; description:
     </div>
 );
 
-const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen, onStartApply }) => {
-    // State now holds an array of selected categories for multi-select
+const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs }) => {
+    const navigate = useNavigate();
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleCategoryChange = (category: string) => {
         setSelectedCategories(prevSelected => {
             if (prevSelected.includes(category)) {
-                // If category is already selected, unselect it
                 return prevSelected.filter(c => c !== category);
             } else {
-                // Otherwise, add it to the selection
                 return [...prevSelected, category];
             }
         });
     };
 
     const filteredJobs = jobs.filter(job => {
-        // If no categories are selected, show all. Otherwise, match against selected categories.
         const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(job.category);
         const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               job.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               job.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
         return matchesCategory && matchesSearch;
     });
+
+    const onStartApply = (jobId: string) => {
+        navigate(`/jobs/${jobId}/apply`);
+    };
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -96,7 +96,6 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen,
                         className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
                     />
                 </div>
-                {/* Updated multi-select category filters */}
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
                     {categories.map(category => (
                         <label key={category} className="cursor-pointer">
@@ -158,7 +157,7 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen,
                  <h2 className="text-3xl font-bold text-amo-dark">Are you hiring AI talent?</h2>
                  <p className="text-lg text-gray-600 mt-2 mb-6">Post your openings and reach hundreds of startup founders and engineers using AMO AI.</p>
                  <button 
-                    onClick={() => setCurrentScreen(Screen.PostAJob)}
+                    onClick={() => navigate('/jobs/post')}
                     className="bg-amo-orange text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transition-all">
                      Add Job Posting
                  </button>

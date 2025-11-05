@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
-import { Screen, Event } from '../types';
+import { Event } from '../types';
 import { CalendarIcon, MapPinIcon, UsersIcon, ArrowRightIcon } from '../components/Icons';
+import { NavigateFunction } from 'react-router-dom';
 
 interface MyEventsScreenProps {
     events: Event[];
-    setCurrentScreen: (screen: Screen) => void;
-    onViewDetails: (eventId: string) => void;
+    navigate: NavigateFunction;
 }
 
 const MyEventCard: React.FC<{ event: Event; onViewDetails: (id: string) => void; }> = ({ event, onViewDetails }) => (
@@ -33,14 +32,14 @@ const MyEventCard: React.FC<{ event: Event; onViewDetails: (id: string) => void;
 );
 
 
-const EmptyState: React.FC<{ events: Event[], setCurrentScreen: (screen: Screen) => void; }> = ({ events, setCurrentScreen }) => (
+const EmptyState: React.FC<{ events: Event[], navigate: NavigateFunction }> = ({ events, navigate }) => (
     <div>
         <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
             <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-2" />
             <h3 className="text-lg font-bold text-gray-800">No upcoming events</h3>
             <p className="text-gray-500 mt-1 mb-4 text-sm">You haven’t registered for any upcoming events yet.</p>
             <button
-                onClick={() => setCurrentScreen(Screen.Events)}
+                onClick={() => navigate('/events')}
                 className="bg-amo-dark text-white font-bold py-2 px-5 rounded-lg hover:bg-black transition-all"
             >
                 Browse Events
@@ -56,7 +55,7 @@ const EmptyState: React.FC<{ events: Event[], setCurrentScreen: (screen: Screen)
                         <div>
                             <h4 className="font-bold text-sm text-amo-dark">{event.title}</h4>
                             <p className="text-xs text-gray-500 mt-1">{event.date}</p>
-                            <button onClick={() => setCurrentScreen(Screen.Events)} className="text-xs font-bold text-amo-orange mt-2">Register</button>
+                            <button onClick={() => navigate('/events')} className="text-xs font-bold text-amo-orange mt-2">Register</button>
                         </div>
                     </div>
                 ))}
@@ -74,7 +73,7 @@ const EmptyState: React.FC<{ events: Event[], setCurrentScreen: (screen: Screen)
 );
 
 
-const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events, setCurrentScreen, onViewDetails }) => {
+const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events, navigate }) => {
     const [activeTab, setActiveTab] = useState('Upcoming');
     
     const registeredEvents = events.filter(e => e.registered);
@@ -86,6 +85,10 @@ const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events, setCurrentScree
         Upcoming: upcomingEvents.length,
         Past: pastEvents.length
     };
+    
+    const onViewDetails = (eventId: string) => {
+        navigate(`/events/${eventId}`);
+    };
 
     return (
         <div>
@@ -95,7 +98,7 @@ const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events, setCurrentScree
                     <p className="text-gray-600 mt-1">Manage your event registrations</p>
                 </div>
                 <button 
-                    onClick={() => setCurrentScreen(Screen.Events)}
+                    onClick={() => navigate('/events')}
                     className="bg-amo-dark text-white font-semibold py-2 px-4 rounded-lg hover:bg-black transition-colors flex items-center gap-2 mt-4 md:mt-0"
                 >
                     Browse All Events
@@ -124,7 +127,7 @@ const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events, setCurrentScree
             {/* Content */}
             <div className="mt-8">
                 {eventsToShow.length === 0 ? (
-                    <EmptyState events={events} setCurrentScreen={setCurrentScreen}/>
+                    <EmptyState events={events} navigate={navigate}/>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {eventsToShow.map(event => (

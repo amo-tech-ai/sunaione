@@ -1,18 +1,17 @@
-
 import React, { useState, useCallback } from 'react';
-import { Screen } from '../types';
 import { PublicHeader } from './HomePage';
 import Footer from '../components/Footer';
 import { 
     DocumentDuplicateIcon, CogIcon, CheckCircleIcon, GlobeAltIcon, 
     UsersIcon, ChartBarIcon, ArrowRightIcon, ImageIcon 
 } from '../components/Icons';
+import { NavigateFunction } from 'react-router-dom';
 
 interface PostAJobScreenProps {
-  setCurrentScreen: (screen: Screen) => void;
+  navigate: NavigateFunction;
 }
 
-const PostAJobScreen: React.FC<PostAJobScreenProps> = ({ setCurrentScreen }) => {
+const PostAJobScreen: React.FC<PostAJobScreenProps> = ({ navigate }) => {
   const [skills, setSkills] = useState<string[]>(['Python', 'Machine Learning']);
   const [skillInput, setSkillInput] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -70,7 +69,7 @@ const PostAJobScreen: React.FC<PostAJobScreenProps> = ({ setCurrentScreen }) => 
 
   return (
     <div className="bg-amo-beige">
-      <PublicHeader onNavigate={setCurrentScreen} />
+      <PublicHeader navigate={navigate} />
       <main className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <header className="text-center pt-8 pb-12">
@@ -193,7 +192,7 @@ const PostAJobScreen: React.FC<PostAJobScreenProps> = ({ setCurrentScreen }) => 
            </div>
         </div>
       </main>
-      <Footer onNavigate={setCurrentScreen} />
+      <Footer navigate={navigate} />
     </div>
   );
 };

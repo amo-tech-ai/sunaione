@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Screen, DeckData, Deck, Event, Perk, Job, Article } from './types';
+import { Routes, Route, useNavigate, useParams, Navigate, Outlet } from 'react-router-dom';
+import { DeckData, Deck, Event, Perk, Job, Article } from './types';
 import { generateDeck } from './services/geminiService';
 
 import WizardSteps from './screens/WizardSteps';
@@ -21,6 +22,61 @@ import BlogScreen from './screens/BlogScreen';
 import ApplyScreen from './screens/ApplyScreen';
 import ApplySuccessScreen from './screens/ApplySuccessScreen';
 
+// --- Wrapper Components for routing ---
+
+const DeckEditorWrapper: React.FC<{ decks: Deck[]; setDecks: React.Dispatch<React.SetStateAction<Deck[]>> }> = ({ decks, setDecks }) => {
+    const { deckId } = useParams<{ deckId: string }>();
+    const navigate = useNavigate();
+    const activeDeck = decks.find(d => d.id === deckId);
+    
+    const setActiveDeck = (updatedDeck: Deck | null) => {
+        if (updatedDeck) {
+            setDecks(decks.map(d => d.id === updatedDeck.id ? updatedDeck : d));
+        }
+    };
+
+    if (!activeDeck) return <Navigate to="/dashboard" />;
+    return <DeckEditor deck={activeDeck} setDeck={setActiveDeck} navigate={navigate} />;
+};
+
+const PresentationWrapper: React.FC<{ decks: Deck[] }> = ({ decks }) => {
+    const { deckId } = useParams<{ deckId: string }>();
+    const navigate = useNavigate();
+    const activeDeck = decks.find(d => d.id === deckId);
+    if (!activeDeck) return <Navigate to="/dashboard" />;
+    return <PresentationScreen deck={activeDeck} navigate={navigate} />;
+};
+
+const EventDetailWrapper: React.FC<{ events: Event[]; onRegisterToggle: (id: string) => void }> = ({ events, onRegisterToggle }) => {
+    const { eventId } = useParams<{ eventId: string }>();
+    const navigate = useNavigate();
+    if (!eventId) return <Navigate to="/events" />;
+    return <EventDetailScreen eventId={eventId} events={events} onRegisterToggle={onRegisterToggle} navigate={navigate} />;
+};
+
+const PerkDetailWrapper: React.FC<{ perks: Perk[] }> = ({ perks }) => {
+    const { perkId } = useParams<{ perkId: string }>();
+    const navigate = useNavigate();
+    if (!perkId) return <Navigate to="/perks" />;
+    return <PerkDetailScreen perkId={perkId} allPerks={perks} navigate={navigate} />;
+};
+
+const ApplyWrapper: React.FC<{ jobs: Job[]; onSuccess: (jobId: string) => void }> = ({ jobs, onSuccess }) => {
+    const { jobId } = useParams<{ jobId: string }>();
+    const navigate = useNavigate();
+    const jobToApply = jobs.find(j => j.id === jobId);
+    if (!jobToApply) return <Navigate to="/jobs" />;
+    return <ApplyScreen job={jobToApply} onSuccess={() => onSuccess(jobToApply.id)} navigate={navigate} />;
+};
+
+const ApplySuccessWrapper: React.FC<{ jobs: Job[] }> = ({ jobs }) => {
+    const { jobId } = useParams<{ jobId: string }>();
+    const navigate = useNavigate();
+    const appliedJob = jobs.find(j => j.id === jobId);
+    if (!appliedJob) return <Navigate to="/jobs" />;
+    return <ApplySuccessScreen job={appliedJob} navigate={navigate} />;
+};
+
 
 const initialDeckData: DeckData = {
   companyName: '', problem: '', solution: '', targetAudience: '',
@@ -29,21 +85,17 @@ const initialDeckData: DeckData = {
 };
 
 const App: React.FC = () => {
-    const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.Home);
     const [deckData, setDeckData] = useState<DeckData>(initialDeckData);
     const [decks, setDecks] = useState<Deck[]>([]);
-    const [activeDeckId, setActiveDeckId] = useState<string | null>(null);
-
     const [events, setEvents] = useState<Event[]>([]);
     const [perks, setPerks] = useState<Perk[]>([]);
     const [jobs, setJobs] = useState<Job[]>([]);
     const [articles, setArticles] = useState<Article[]>([]);
     
-    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-    const [selectedPerkId, setSelectedPerkId] = useState<string | null>(null);
-    const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        // Mock data loading
         const mockDecks: Deck[] = [
             { id: 'deck1', name: 'Innovate AI Pitch', lastEdited: Date.now() - 86400000, template: 'startup', slides: [{title: 'Title', content: ['Innovate AI: The Future of Automation']}, {title: 'Problem', content: ['Manual data entry is slow and error-prone']}] },
             { id: 'deck2', name: 'HealthTech Solution', lastEdited: Date.now() - 2 * 86400000, template: 'corporate', slides: [{title: 'Welcome', content: ['Revolutionizing Patient Care']}] },
@@ -79,82 +131,49 @@ const App: React.FC = () => {
     }, []);
 
     const handleDeckGenerationFinish = async () => {
-        setCurrentScreen(Screen.Generating);
+        navigate('/generating');
         const newSlides = await generateDeck(deckData);
         const newDeck: Deck = { id: String(Date.now()), name: `${deckData.companyName} Pitch Deck`, slides: newSlides, lastEdited: Date.now(), template: deckData.template };
         setDecks(prev => [...prev, newDeck]);
         setDeckData(initialDeckData);
-        setActiveDeckId(newDeck.id);
-        setCurrentScreen(Screen.DeckEditor);
+        navigate(`/deck/${newDeck.id}/edit`);
     };
 
     const handleSelectDeck = (deckId: string) => {
-        setActiveDeckId(deckId);
-        setCurrentScreen(Screen.DeckEditor);
-    };
-    
-    const activeDeck = decks.find(d => d.id === activeDeckId) || null;
-    const setActiveDeck = (updatedDeck: Deck | null) => {
-        if (updatedDeck) {
-            setDecks(decks.map(d => d.id === updatedDeck.id ? updatedDeck : d));
-        }
+        navigate(`/deck/${deckId}/edit`);
     };
     
     const handleRegisterToggle = (eventId: string) => {
         setEvents(events.map(e => e.id === eventId ? { ...e, registered: !e.registered, registeredCount: e.registered ? e.registeredCount - 1 : e.registeredCount + 1 } : e));
     };
 
-    const dashboardScreens = [ Screen.Dashboard, Screen.Profile, Screen.MyEvents, Screen.Perks, Screen.Events, Screen.EventDetail, Screen.PerkDetail, Screen.JobBoard, Screen.DeckEditor, Screen.Presentation, Screen.Apply, Screen.ApplySuccess ];
+    return (
+        <Routes>
+            <Route path="/" element={<HomePage navigate={navigate} />} />
+            <Route path="/blog" element={<BlogScreen navigate={navigate} />} />
+            <Route path="/jobs/post" element={<PostAJobScreen navigate={navigate} />} />
+            <Route path="/create-deck" element={<WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleDeckGenerationFinish} navigate={navigate} />} />
+            <Route path="/generating" element={<GeneratingScreen />} />
 
-    const renderScreen = () => {
-        switch (currentScreen) {
-            case Screen.Home: return <HomePage setCurrentScreen={setCurrentScreen} />;
-            case Screen.Welcome: case Screen.Problem: case Screen.Market: case Screen.Traction: case Screen.Ask:
-                return <WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleDeckGenerationFinish} />;
-            case Screen.Generating: return <GeneratingScreen />;
-            case Screen.Dashboard: return <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
-            case Screen.DeckEditor:
-                if (!activeDeck) return <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
-                return <DeckEditor deck={activeDeck} setDeck={setActiveDeck} setCurrentScreen={setCurrentScreen} />;
-            case Screen.Presentation:
-                if (!activeDeck) return <Dashboard decks={decks} setCurrentScreen={setCurrentScreen} onSelectDeck={handleSelectDeck} />;
-                return <PresentationScreen deck={activeDeck} setCurrentScreen={setCurrentScreen} />;
-            case Screen.Profile: return <ProfileScreen />;
-            case Screen.Events: return <EventsScreen events={events} onRegisterToggle={handleRegisterToggle} onViewDetails={(id) => { setSelectedEventId(id); setCurrentScreen(Screen.EventDetail); }} />;
-            case Screen.EventDetail:
-                if (!selectedEventId) return <EventsScreen events={events} onRegisterToggle={handleRegisterToggle} onViewDetails={(id) => { setSelectedEventId(id); setCurrentScreen(Screen.EventDetail); }} />;
-                return <EventDetailScreen eventId={selectedEventId} events={events} onRegisterToggle={handleRegisterToggle} setCurrentScreen={setCurrentScreen} />;
-            case Screen.MyEvents: return <MyEventsScreen events={events} setCurrentScreen={setCurrentScreen} onViewDetails={(id) => { setSelectedEventId(id); setCurrentScreen(Screen.EventDetail); }} />;
-            case Screen.Perks: return <PerksScreen perks={perks} onViewDetails={(id) => { setSelectedPerkId(id); setCurrentScreen(Screen.PerkDetail); }} />;
-            case Screen.PerkDetail:
-                if (!selectedPerkId) return <PerksScreen perks={perks} onViewDetails={(id) => { setSelectedPerkId(id); setCurrentScreen(Screen.PerkDetail); }} />;
-                return <PerkDetailScreen perkId={selectedPerkId} allPerks={perks} setCurrentScreen={setCurrentScreen} onViewDetails={(id) => setSelectedPerkId(id)} />;
-            case Screen.JobBoard: return <JobBoardScreen jobs={jobs} setCurrentScreen={setCurrentScreen} onStartApply={(id) => { setSelectedJobId(id); setCurrentScreen(Screen.Apply); }} />;
-            case Screen.PostAJob: return <PostAJobScreen setCurrentScreen={setCurrentScreen} />;
-            case Screen.Blog: return <BlogScreen articles={articles} setCurrentScreen={setCurrentScreen} />;
-            case Screen.Apply:
-                const jobToApply = jobs.find(j => j.id === selectedJobId);
-                if (!jobToApply) return <JobBoardScreen jobs={jobs} setCurrentScreen={setCurrentScreen} onStartApply={(id) => { setSelectedJobId(id); setCurrentScreen(Screen.Apply); }} />;
-                return <ApplyScreen job={jobToApply} onSuccess={() => setCurrentScreen(Screen.ApplySuccess)} setCurrentScreen={setCurrentScreen} />;
-            case Screen.ApplySuccess:
-                 const appliedJob = jobs.find(j => j.id === selectedJobId);
-                 if (!appliedJob) return <JobBoardScreen jobs={jobs} setCurrentScreen={setCurrentScreen} onStartApply={(id) => { setSelectedJobId(id); setCurrentScreen(Screen.Apply); }} />;
-                 return <ApplySuccessScreen job={appliedJob} setCurrentScreen={setCurrentScreen} />;
-            default: return <HomePage setCurrentScreen={setCurrentScreen} />;
-        }
-    };
+            <Route path="/deck/:deckId/edit" element={<DeckEditorWrapper decks={decks} setDecks={setDecks} />} />
+            <Route path="/deck/:deckId/present" element={<PresentationWrapper decks={decks} />} />
+            <Route path="/jobs/:jobId/apply/success" element={<ApplySuccessWrapper jobs={jobs} />} />
 
-    // Screens like HomePage, Blog, and PostAJob have their own headers/footers.
-    const standaloneScreens = [Screen.Home, Screen.Blog, Screen.PostAJob];
-    if (standaloneScreens.includes(currentScreen)) {
-        return renderScreen();
-    }
+            <Route element={<DashboardLayout />}>
+                <Route path="/dashboard" element={<Dashboard decks={decks} onSelectDeck={handleSelectDeck} navigate={navigate} />} />
+                <Route path="/profile" element={<ProfileScreen />} />
+                <Route path="/my-events" element={<MyEventsScreen events={events} navigate={navigate} />} />
+                <Route path="/events" element={<EventsScreen events={events} onRegisterToggle={handleRegisterToggle} />} />
+                <Route path="/events/:eventId" element={<EventDetailWrapper events={events} onRegisterToggle={handleRegisterToggle} />} />
+                <Route path="/perks" element={<PerksScreen perks={perks} />} />
+                <Route path="/perks/:perkId" element={<PerkDetailWrapper perks={perks} />} />
+                <Route path="/jobs" element={<JobBoardScreen jobs={jobs} />} />
+                <Route path="/jobs/:jobId/apply" element={<ApplyWrapper jobs={jobs} onSuccess={(jobId) => navigate(`/jobs/${jobId}/apply/success`)} />} />
+            </Route>
 
-    if (dashboardScreens.includes(currentScreen)) {
-        return <DashboardLayout currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}>{renderScreen()}</DashboardLayout>;
-    }
-    
-    return renderScreen();
+            <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+    );
 };
 
 export default App;
