@@ -1,71 +1,77 @@
-import { Deck, DeckData } from '../types';
+import { Deck } from '../types';
 
-// --- Simulation of a backend API using localStorage ---
+// --- In-memory Mock Store ---
+// The Supabase client has been removed to fix connection errors.
+// This mock store simulates a database for the duration of the user session.
 
-const FAKE_LATENCY = 300; // ms
+const MOCK_DECKS: Deck[] = [
+    {
+        id: 'deck-1-start',
+        name: 'Project Innovate Pitch',
+        template: 'startup',
+        lastEdited: new Date('2024-10-25T10:00:00Z').getTime(),
+        slides: [
+            { title: 'Introduction', content: ['Welcome to Project Innovate!', 'Changing the world, one line of code at a time.'], image: 'https://source.unsplash.com/random/800x600/?startup,tech' },
+            { title: 'The Problem', content: ['The market has a significant gap.', 'Existing solutions are slow and expensive.'] },
+            { title: 'Our Solution', content: ['A revolutionary new platform.', 'Faster, cheaper, and more efficient.'] },
+        ],
+    },
+    {
+        id: 'deck-2-corp',
+        name: 'Q4 Corporate Strategy',
+        template: 'corporate',
+        lastEdited: new Date('2024-10-26T14:30:00Z').getTime(),
+        slides: [
+            { title: 'Q3 Performance Review', content: ['Met all key performance indicators.', 'Exceeded revenue targets by 15%.'] },
+            { title: 'Q4 Strategic Goals', content: ['Expand into the European market.', 'Launch two new product features.'] },
+        ],
+    },
+];
 
-const getDecks = async (): Promise<Deck[]> => {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const savedDecks = localStorage.getItem('amo_decks');
-            resolve(savedDecks ? JSON.parse(savedDecks) : []);
-        }, FAKE_LATENCY);
-    });
-};
-
-const saveAllDecks = async (decks: Deck[]): Promise<void> => {
-     return new Promise(resolve => {
-        setTimeout(() => {
-            localStorage.setItem('amo_decks', JSON.stringify(decks));
-            resolve();
-        }, FAKE_LATENCY);
-    });
-}
+let decksStore: Deck[] = JSON.parse(JSON.stringify(MOCK_DECKS)); // Deep copy for a fresh start on reload
 
 export const deckService = {
     async getDecks(): Promise<Deck[]> {
-        return getDecks();
+        await new Promise(resolve => setTimeout(resolve, 200)); // Simulate network delay
+        return [...decksStore].sort((a, b) => b.lastEdited - a.lastEdited);
     },
 
     async saveDeck(deckToSave: Deck): Promise<Deck> {
-        const decks = await getDecks();
-        const deckIndex = decks.findIndex(d => d.id === deckToSave.id);
-        if (deckIndex > -1) {
-            decks[deckIndex] = deckToSave;
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const index = decksStore.findIndex(d => d.id === deckToSave.id);
+        if (index !== -1) {
+            decksStore[index] = { ...deckToSave };
         } else {
-            decks.push(deckToSave);
+            decksStore.push({ ...deckToSave });
         }
-        await saveAllDecks(decks);
         return deckToSave;
     },
 
-    async createDeck(newDeck: Deck): Promise<Deck> {
-        const decks = await getDecks();
-        decks.push(newDeck);
-        await saveAllDecks(decks);
-        return newDeck;
-    },
-
     async deleteDeck(deckId: string): Promise<void> {
-        let decks = await getDecks();
-        decks = decks.filter(d => d.id !== deckId);
-        await saveAllDecks(decks);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        decksStore = decksStore.filter(d => d.id !== deckId);
     },
     
     async duplicateDeck(deckId: string): Promise<Deck> {
-        const decks = await getDecks();
-        const deckToDuplicate = decks.find(d => d.id === deckId);
-        if (!deckToDuplicate) {
-            throw new Error("Deck not found");
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const originalDeck = decksStore.find(d => d.id === deckId);
+        if (!originalDeck) {
+            throw new Error("Deck not found for duplication");
         }
         const duplicatedDeck: Deck = {
-            ...deckToDuplicate,
+            ...JSON.parse(JSON.stringify(originalDeck)),
             id: `deck-${Date.now()}`,
-            name: `${deckToDuplicate.name} (Copy)`,
+            name: `${originalDeck.name} (Copy)`,
             lastEdited: Date.now(),
         };
-        decks.push(duplicatedDeck);
-        await saveAllDecks(decks);
+        decksStore.push(duplicatedDeck);
         return duplicatedDeck;
+    },
+
+    // New method for App.tsx to add a fully formed deck to the mock store
+    async addDeck(newDeck: Deck): Promise<Deck> {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        decksStore.push(newDeck);
+        return newDeck;
     }
 };

@@ -21,7 +21,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <ul className="mt-4 space-y-2">
                     <li><Link to="/pitch-deck" className="text-gray-400 hover:text-white text-sm">Create Deck</Link></li>
                     <li><Link to="/dashboard" className="text-gray-400 hover:text-white text-sm">Dashboard</Link></li>
-                    <li><Link to="/profile" className="text-gray-400 hover:text-white text-sm">Profile</Link></li>
+                    <li><Link to="/dashboard/profile" className="text-gray-400 hover:text-white text-sm">Profile</Link></li>
                     <li><Link to="/perks" className="text-gray-400 hover:text-white text-sm">Perks</Link></li>
                 </ul>
             </div>
@@ -29,7 +29,7 @@ const Footer: React.FC<FooterProps> = () => {
                  <h3 className="font-bold text-gray-300">Community</h3>
                  <ul className="mt-4 space-y-2">
                     <li><Link to="/events" className="text-gray-400 hover:text-white text-sm">Events</Link></li>
-                    <li><Link to="/my-events" className="text-gray-400 hover:text-white text-sm">My Events</Link></li>
+                    <li><Link to="/dashboard/my-events" className="text-gray-400 hover:text-white text-sm">My Events</Link></li>
                     <li><Link to="/blog" className="text-gray-400 hover:text-white text-sm">Blog</Link></li>
                     <li><Link to="/jobs" className="text-gray-400 hover:text-white text-sm">Job Board</Link></li>
                     <li><Link to="/jobs/post" className="text-gray-400 hover:text-white text-sm">Post a Job</Link></li>

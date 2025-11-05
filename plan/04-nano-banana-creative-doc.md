@@ -172,7 +172,7 @@ After image generation:
 | Stage | Tool                      | Role                                |
 | ----- | ------------------------- | ----------------------------------- |
 | 1     | Gemini Pro (Text)         | Generate deck content (slides.json) |
-| 2     | Gemini Flash Image        | Generate & edit images              |
+| 2     | Gemini Flaseh Image        | Generate & edit images              |
 | 3     | Supabase                  | Store metadata & images             |
 | 4     | React / Vite Frontend     | Display and edit slides             |
 | 5     | Mermaid Diagram           | Visualize workflow                  |
@@ -203,4 +203,4 @@ Each output must be **developer-friendly**, **visually consistent**, and **align
 - Follows **official Gemini docs** for image generation and refinement.  
 - Integrates **Mermaid diagrams** as auto-generated visual documentation.  
 - Defines the **exact workflow** from user input → generation → export.  
-- Ready for direct use in **Google AI Studio** or **API orchestration** via Supabase.
+- Ready for direct use in **Google AI Studio** or **API orchestration** via Supabas.

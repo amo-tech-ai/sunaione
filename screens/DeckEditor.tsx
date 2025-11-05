@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Deck, Slide } from '../types';
 import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon, XMarkIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
-import { rewriteSlideContent, generateSlideImage, refineText } from '../services/geminiService';
+import { generateSlideImage, generateSlideSuggestions } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
 
 interface DeckEditorProps {
@@ -52,21 +53,51 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     const [localDeck, setLocalDeck] = useState<Deck>(deck);
     const [activeSlide, setActiveSlide] = useState(0);
     const [showSaveToast, setShowSaveToast] = useState(false);
-    const [refiningField, setRefiningField] = useState<'title' | 'content' | null>(null);
-    const [suggestion, setSuggestion] = useState<{
-      field: 'title' | 'content';
-      original: string;
-      refined: string;
-    } | null>(null);
+    const [suggestions, setSuggestions] = useState<Record<number, { title?: string; content?: string }>>({});
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
     const navigate = useNavigate();
 
     // Sync local state if the incoming deck prop changes
     useEffect(() => {
         setLocalDeck(deck);
     }, [deck]);
+    
+    // Generate all suggestions on deck load
+    useEffect(() => {
+        const generateAllSuggestions = async () => {
+            if (!localDeck || !localDeck.slides) return;
+            setIsLoadingSuggestions(true);
+            const allSuggestions: Record<number, { title?: string; content?: string }> = {};
 
-    const handleSave = () => {
-        setDeck({ ...localDeck, lastEdited: Date.now() });
+            const suggestionPromises = localDeck.slides.map(async (slide, index) => {
+                const suggestion = await generateSlideSuggestions(slide);
+                if (suggestion) {
+                    const slideSuggestions: { title?: string; content?: string } = {};
+                    const originalContentStr = slide.content.join('\n');
+                    
+                    if (suggestion.suggested_title && suggestion.suggested_title.trim().toLowerCase() !== slide.title.trim().toLowerCase()) {
+                        slideSuggestions.title = suggestion.suggested_title.trim();
+                    }
+                    if (suggestion.suggested_content && suggestion.suggested_content.trim().toLowerCase() !== originalContentStr.trim().toLowerCase()) {
+                        slideSuggestions.content = suggestion.suggested_content.trim();
+                    }
+                    
+                    if (Object.keys(slideSuggestions).length > 0) {
+                        allSuggestions[index] = slideSuggestions;
+                    }
+                }
+            });
+
+            await Promise.all(suggestionPromises);
+            setSuggestions(allSuggestions);
+            setIsLoadingSuggestions(false);
+        };
+
+        generateAllSuggestions();
+    }, [localDeck.id]); // Re-run if a different deck is loaded
+
+    const handleSave = async () => {
+        await setDeck({ ...localDeck, lastEdited: Date.now() });
         setShowSaveToast(true);
         setTimeout(() => setShowSaveToast(false), 3000);
     }
@@ -92,41 +123,31 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         setLocalDeck({ ...localDeck, slides: newSlides });
     };
     
-    const handleRefine = async (field: 'title' | 'content') => {
-        setRefiningField(field);
-        setSuggestion(null);
+    const handleAcceptSuggestion = (field: 'title' | 'content') => {
+        const suggestionText = suggestions[activeSlide]?.[field];
+        if (!suggestionText) return;
 
-        const textToRefine = field === 'title' ? localDeck.slides[activeSlide].title : localDeck.slides[activeSlide].content.join('\n');
-        
-        if (!textToRefine.trim()) {
-            setRefiningField(null);
-            return;
-        }
-
-        try {
-            const refinedText = await refineText(textToRefine, field === 'title' ? 'Slide Title' : 'Slide Content');
-            if(refinedText.trim() && refinedText.trim().toLowerCase() !== textToRefine.trim().toLowerCase()) {
-                setSuggestion({ field, original: textToRefine, refined: refinedText });
-            }
-        } catch (error) {
-            console.error(`Error refining ${field}:`, error);
-        } finally {
-            setRefiningField(null);
-        }
-    };
-
-    const handleAcceptSuggestion = () => {
-        if (!suggestion) return;
-        if (suggestion.field === 'title') {
-            updateSlide(activeSlide, { title: suggestion.refined });
+        if (field === 'title') {
+            updateSlide(activeSlide, { title: suggestionText });
         } else {
-            updateSlide(activeSlide, { content: suggestion.refined.split('\n') });
+            updateSlide(activeSlide, { content: suggestionText.split('\n') });
         }
-        setSuggestion(null);
+
+        // Remove the suggestion after accepting
+        setSuggestions(prev => {
+            const newSlideSuggestions = { ...prev[activeSlide] };
+            delete newSlideSuggestions[field];
+            return { ...prev, [activeSlide]: newSlideSuggestions };
+        });
     };
 
-    const handleRejectSuggestion = () => {
-        setSuggestion(null);
+    const handleRejectSuggestion = (field: 'title' | 'content') => {
+        // Remove the suggestion after rejecting
+        setSuggestions(prev => {
+            const newSlideSuggestions = { ...prev[activeSlide] };
+            delete newSlideSuggestions[field];
+            return { ...prev, [activeSlide]: newSlideSuggestions };
+        });
     };
     
     const handleGenerateImage = async () => {
@@ -151,8 +172,8 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         setActiveSlide(newSlides.length - 1);
     };
 
-
     const currentSlide = localDeck.slides[activeSlide];
+    const currentSuggestions = suggestions[activeSlide] || {};
 
     return (
         <div className="flex flex-col lg:flex-row h-screen bg-gray-100">
@@ -168,9 +189,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                         <div
                             key={index}
                             onClick={() => setActiveSlide(index)}
-                            className={`p-2 rounded-lg cursor-pointer border-2 ${activeSlide === index ? style.accentBorder : 'border-transparent'} ${style.accentBgLight}`}
+                            className={`relative p-2 rounded-lg cursor-pointer border-2 ${activeSlide === index ? style.accentBorder : 'border-transparent'} ${style.accentBgLight}`}
                         >
                             <p className={`text-sm font-semibold ${style.header}`}>{index + 1}. {slide.title}</p>
+                             {suggestions[index] && (Object.keys(suggestions[index]).length > 0) && (
+                                // Fix: The `title` prop is not a valid SVG attribute in React. Wrapped the `SparklesIcon` in a `div` with a `title` attribute to provide the tooltip and resolve the TypeScript error.
+                                <div title="AI suggestions available" className="absolute top-2 right-2">
+                                    <SparklesIcon className="w-4 h-4 text-amo-orange" />
+                                </div>
+                             )}
                         </div>
                     ))}
                 </div>
@@ -220,7 +247,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                     {/* Editing controls */}
                     <div className="flex flex-col gap-8">
                          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                            <h3 className="text-xl font-bold text-amo-dark mb-4">Edit Content</h3>
+                            <h3 className="text-xl font-bold text-amo-dark mb-4 flex items-center gap-2">
+                                Edit Content
+                                {isLoadingSuggestions && (
+                                    <span className="text-sm font-normal text-gray-500 flex items-center gap-1">
+                                        <LoaderIcon className="w-4 h-4 animate-spin" />
+                                        Generating suggestions...
+                                    </span>
+                                )}
+                            </h3>
                             
                             <div className="relative mb-4">
                                 <label htmlFor="slide-title" className="block text-sm font-medium text-gray-700 mb-1">Slide Title</label>
@@ -231,13 +266,10 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                                     onChange={handleTitleChange}
                                     className="w-full p-3 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
                                 />
-                                <button onClick={() => handleRefine('title')} disabled={refiningField === 'title'} className="absolute top-8 right-2 p-1 text-amo-orange hover:bg-orange-100 rounded-full disabled:text-gray-400 disabled:cursor-not-allowed">
-                                    {refiningField === 'title' ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
-                                </button>
                             </div>
                             
-                            {suggestion && suggestion.field === 'title' && (
-                                <SuggestionBox suggestion={suggestion.refined} onAccept={handleAcceptSuggestion} onReject={handleRejectSuggestion} />
+                            {currentSuggestions.title && (
+                                <SuggestionBox suggestion={currentSuggestions.title} onAccept={() => handleAcceptSuggestion('title')} onReject={() => handleRejectSuggestion('title')} />
                             )}
 
                             <div className="relative">
@@ -247,17 +279,13 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                                     value={currentSlide.content.join('\n')}
                                     onChange={handleContentChange}
                                     className="w-full h-40 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
+                                    placeholder="Enter each bullet point on a new line."
                                 />
                             </div>
                             
-                            {suggestion && suggestion.field === 'content' && (
-                                <SuggestionBox suggestion={suggestion.refined} onAccept={handleAcceptSuggestion} onReject={handleRejectSuggestion} />
+                            {currentSuggestions.content && (
+                                <SuggestionBox suggestion={currentSuggestions.content} onAccept={() => handleAcceptSuggestion('content')} onReject={() => handleRejectSuggestion('content')} />
                             )}
-
-                            <button onClick={() => handleRefine('content')} disabled={refiningField === 'content'} className="mt-4 w-full bg-amo-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400">
-                                {refiningField === 'content' ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
-                                {refiningField === 'content' ? 'Refining...' : 'Refine Content with AI'}
-                            </button>
                         </div>
 
                          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">

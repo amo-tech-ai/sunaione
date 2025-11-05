@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Routes, Route, useParams, Navigate } from 'react-router-dom';
+import { Routes, Route, useParams, Navigate, useNavigate } from 'react-router-dom';
 import { DeckData, Deck, Event, Perk, Job, Article, Slide } from './types';
-import { generateDeck, generateSlideImage } from './services/geminiService';
 import { deckService } from './services/deckService';
 
 import WizardSteps from './screens/WizardSteps';
@@ -40,8 +39,7 @@ const initialDeckData: DeckData = {
 };
 
 
-// --- Mock Data ---
-// Initial decks are now loaded from the service, which might be seeded from localStorage.
+// --- Mock Data (for non-deck features) ---
 const initialEvents: Event[] = [
   {
     id: 'event-1',
@@ -161,13 +159,12 @@ const DeckEditorWrapper: React.FC<{ decks: Deck[]; setDecks: React.Dispatch<Reac
     const { id } = useParams<{ id: string }>();
     const activeDeck = decks.find(d => d.id === id);
     
-    const setActiveDeck = useCallback((updatedDeck: Deck | null) => {
+    const setActiveDeck = useCallback(async (updatedDeck: Deck | null) => {
         if (updatedDeck) {
-            deckService.saveDeck(updatedDeck).then(() => {
-                setDecks(decks.map(d => d.id === updatedDeck.id ? updatedDeck : d));
-            });
+            await deckService.saveDeck(updatedDeck);
+            setDecks(currentDecks => currentDecks.map(d => d.id === updatedDeck.id ? updatedDeck : d));
         }
-    }, [decks, setDecks]);
+    }, [setDecks]);
 
     if (!activeDeck) return <Navigate to="/dashboard" />;
     return <DeckEditor deck={activeDeck} setDeck={setActiveDeck} />;
@@ -240,30 +237,33 @@ export const App: React.FC = () => {
     const handleCreateDeck = async (newDeckData: DeckData, navigate: (path: string) => void) => {
         navigate('/pitch-deck/generating');
         
+        // Simulate async operation and deck generation from the backend
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
         try {
-            const newSlides: Slide[] = await generateDeck(newDeckData);
-
-            const slidesWithImagesPromises = newSlides.map(async (slide) => {
-                try {
-                    const imageUrl = await generateSlideImage(slide.title, slide.content);
-                    return { ...slide, image: imageUrl };
-                } catch (error) {
-                    console.error("Failed to generate image for slide:", slide.title, error);
-                    return slide;
-                }
-            });
-
-            const slidesWithImages = await Promise.all(slidesWithImagesPromises);
-
+            console.log("Simulating deck creation from data:", newDeckData);
+            
+            // This simulates the behavior of the 'create-deck-with-images' Edge Function
             const newDeck: Deck = {
                 id: `deck-${Date.now()}`,
                 name: newDeckData.companyName || 'Untitled Deck',
-                slides: slidesWithImages,
-                lastEdited: Date.now(),
                 template: newDeckData.template,
+                lastEdited: Date.now(),
+                slides: [
+                    { title: 'Welcome', content: [`To the pitch for ${newDeckData.companyName}`], image: `https://picsum.photos/500/300?random=1` },
+                    { title: 'The Problem', content: newDeckData.problem.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=2` },
+                    { title: 'Our Solution', content: newDeckData.solution.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=3` },
+                    { title: 'Target Audience', content: newDeckData.targetAudience.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=4` },
+                    { title: 'Business Model', content: newDeckData.businessModel.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=5` },
+                    { title: 'Traction', content: newDeckData.traction.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=6` },
+                    { title: 'Our Team', content: newDeckData.teamMembers.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=7` },
+                    { title: 'The Ask', content: [`We are seeking ${newDeckData.fundingAmount}.`, ...newDeckData.useOfFunds.split('\n').filter(Boolean)], image: `https://picsum.photos/500/300?random=8` },
+                    { title: 'Thank You', content: ['Any Questions?'], image: `https://picsum.photos/500/300?random=9` },
+                ].filter(slide => slide.content.length > 0 && !(slide.content.length === 1 && slide.content[0] === '')), // Remove empty slides
             };
-            
-            await deckService.createDeck(newDeck);
+
+            // Add to our mock store via the service, so it's persisted for the session
+            await deckService.addDeck(newDeck);
             setDecks(prev => [...prev, newDeck]);
             
             // Clear draft and reset form state after successful creation
@@ -272,8 +272,8 @@ export const App: React.FC = () => {
 
             navigate(`/dashboard/decks/${newDeck.id}/edit`);
         } catch (error) {
-            console.error("Failed to create deck:", error);
-            // Navigate back to the wizard on failure
+            console.error("Failed to create mock deck:", error);
+            alert("There was an error creating your deck. Please try again.");
             navigate('/pitch-deck');
         }
     };

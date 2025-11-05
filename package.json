@@ -12,7 +12,8 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "@google/genai": "^1.28.0",
-    "react-router-dom": "^6.26.0"
+    "react-router-dom": "^6.26.0",
+    "https://aistudiocdn.com/@supabase/supabase-js@^2.44.0": "latest"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
