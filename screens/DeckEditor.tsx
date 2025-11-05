@@ -233,16 +233,23 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
 
     const handleGenerateThemeAndVisuals = async () => {
         if (!localDeck.visualThemeDescription) return;
-        setIsGeneratingTheme(true);
 
-        const loadingSlides = localDeck.slides.map(s => ({ ...s, imageLoading: true }));
+        // FIX: Persist any unsaved local changes before starting the generation process.
+        await handleSave();
+        setIsGeneratingTheme(true);
+        
+        // After saving, the `deck` prop will update, triggering the useEffect to update `localDeck`.
+        // We will work with the state of `localDeck` as it is when this function begins.
+        const deckToProcess = { ...localDeck };
+        const originalSlides = deckToProcess.slides;
+
+        const loadingSlides = originalSlides.map(s => ({ ...s, imageLoading: true }));
         setLocalDeck(prev => ({ ...prev, slides: loadingSlides }));
 
         try {
-            const brief = await generateVisualTheme(localDeck.visualThemeDescription);
-            setLocalDeck(prev => ({ ...prev, visualThemeBrief: brief }));
+            const brief = await generateVisualTheme(deckToProcess.visualThemeDescription!);
 
-            const imagePromises = localDeck.slides.map((slide, index) => 
+            const imagePromises = originalSlides.map((slide, index) => 
                 generateSlideImage(slide.title, slide.content, brief)
                     .then(imageUrl => ({ index, imageUrl }))
                     .catch(error => ({ index, error })) 
@@ -250,18 +257,24 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
 
             const results = await Promise.all(imagePromises);
 
-            setLocalDeck(prev => {
-                const newSlides = [...prev.slides];
-                results.forEach(result => {
-                    if ('imageUrl' in result) {
-                        newSlides[result.index].image = result.imageUrl;
-                    } else {
-                        console.error(`Failed to generate image for slide ${result.index}:`, result.error);
-                    }
-                    newSlides[result.index].imageLoading = false;
-                });
-                return { ...prev, slides: newSlides };
+            const finalSlides = [...originalSlides];
+            results.forEach(result => {
+                if ('imageUrl' in result) {
+                    finalSlides[result.index].image = result.imageUrl;
+                } else {
+                    console.error(`Failed to generate image for slide ${result.index}:`, result.error);
+                }
             });
+            
+            const finalDeck: Deck = { 
+                ...deckToProcess, 
+                slides: finalSlides, 
+                visualThemeBrief: brief,
+                lastEdited: Date.now()
+            };
+
+            // Save the newly generated theme and images.
+            await setDeck(finalDeck);
 
         } catch (error) {
             console.error("Error generating theme and visuals:", error);
@@ -390,7 +403,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                             </h3>
                             
                             <div className="relative mb-4">
-                                <label htmlFor="slide-title" className="block text-sm font-medium text-gray-700 mb-1">Slide Title</label>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label htmlFor="slide-title" className="block text-sm font-medium text-gray-700">Slide Title</label>
+                                    {currentSuggestions.title && (
+                                        <div className="flex items-center gap-1 text-xs text-amo-orange font-semibold animate-fade-in" title="AI suggestion available">
+                                            <SparklesIcon className="w-4 h-4" />
+                                            Suggestion available
+                                        </div>
+                                    )}
+                                </div>
                                 <input
                                     id="slide-title"
                                     type="text"
@@ -405,7 +426,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                             )}
 
                             <div className="relative">
-                                <label htmlFor="slide-content" className="block text-sm font-medium text-gray-700 mb-1">Slide Content</label>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label htmlFor="slide-content" className="block text-sm font-medium text-gray-700">Slide Content</label>
+                                    {currentSuggestions.content && (
+                                        <div className="flex items-center gap-1 text-xs text-amo-orange font-semibold animate-fade-in" title="AI suggestion available">
+                                            <SparklesIcon className="w-4 h-4" />
+                                            Suggestion available
+                                        </div>
+                                    )}
+                                </div>
                                 <textarea
                                     id="slide-content"
                                     value={currentSlide.content.join('\n')}
