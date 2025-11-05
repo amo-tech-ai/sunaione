@@ -209,6 +209,8 @@ const ApplySuccessWrapper: React.FC<{ jobs: Job[] }> = ({ jobs }) => {
 // Component to hold all authenticated routes
 const AppRoutes: React.FC = () => {
     const [decks, setDecks] = useState<Deck[]>([]);
+    const [isLoadingDecks, setIsLoadingDecks] = useState(true);
+    const [decksError, setDecksError] = useState<string | null>(null);
     const [deckData, setDeckData] = useState<DeckData>(() => {
         try {
             const savedDraft = localStorage.getItem(WIZARD_DRAFT_KEY);
@@ -226,7 +228,12 @@ const AppRoutes: React.FC = () => {
 
     // Load initial decks from service on mount
     useEffect(() => {
-        deckService.getDecks().then(setDecks).catch(console.error);
+        setIsLoadingDecks(true);
+        setDecksError(null);
+        deckService.getDecks()
+            .then(setDecks)
+            .catch(() => setDecksError("Could not load your decks. Please try again later."))
+            .finally(() => setIsLoadingDecks(false));
     }, []);
 
     // Save wizard draft to localStorage on change
@@ -253,7 +260,7 @@ const AppRoutes: React.FC = () => {
             const newDeck = await deckService.getDeckById(data.deckId);
             if (!newDeck) throw new Error("Could not fetch the newly created deck.");
             
-            setDecks(prev => [...prev, newDeck]);
+            setDecks(prev => [newDeck, ...prev]);
             
             localStorage.removeItem(WIZARD_DRAFT_KEY);
             setDeckData(initialDeckData);
@@ -271,13 +278,23 @@ const AppRoutes: React.FC = () => {
     };
 
     const handleDeleteDeck = async (deckId: string) => {
-        await deckService.deleteDeck(deckId);
-        setDecks(prev => prev.filter(d => d.id !== deckId));
+        try {
+            await deckService.deleteDeck(deckId);
+            setDecks(prev => prev.filter(d => d.id !== deckId));
+        } catch (error) {
+            console.error("Failed to delete deck:", error);
+            setDecksError("Failed to delete the deck. Please refresh and try again.");
+        }
     };
 
     const handleDuplicateDeck = async (deckId: string) => {
-        const duplicatedDeck = await deckService.duplicateDeck(deckId);
-        setDecks(prev => [...prev, duplicatedDeck]);
+        try {
+            const duplicatedDeck = await deckService.duplicateDeck(deckId);
+            setDecks(prev => [duplicatedDeck, ...prev].sort((a, b) => b.lastEdited - a.lastEdited));
+        } catch (error) {
+            console.error("Failed to duplicate deck:", error);
+            setDecksError("Failed to duplicate the deck. Please refresh and try again.");
+        }
     };
     
     const handleRegisterToggle = (eventId: string) => {
@@ -318,7 +335,19 @@ const AppRoutes: React.FC = () => {
 
             {/* Authenticated Dashboard Routes */}
             <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<Dashboard decks={decks} onSelectDeck={handleSelectDeck} onDeleteDeck={handleDeleteDeck} onDuplicateDeck={handleDuplicateDeck} />} />
+                <Route 
+                    index 
+                    element={
+                        <Dashboard 
+                            decks={decks} 
+                            isLoading={isLoadingDecks}
+                            error={decksError}
+                            onSelectDeck={handleSelectDeck} 
+                            onDeleteDeck={handleDeleteDeck} 
+                            onDuplicateDeck={handleDuplicateDeck} 
+                        />
+                    } 
+                />
                 <Route path="profile" element={<ProfileScreen />} />
                 <Route path="my-events" element={<MyEventsScreen events={events} />} />
                 <Route path="decks/:id/edit" element={<DeckEditorWrapper decks={decks} setDecks={setDecks} />} />

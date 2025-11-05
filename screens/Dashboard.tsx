@@ -1,24 +1,25 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { Deck } from '../types';
 import { ArrowRightIcon, DocumentDuplicateIcon, SparklesIcon, SearchIcon, DotsVerticalIcon, TrashIcon, LoaderIcon } from '../components/Icons';
 import OnboardingTour from '../components/OnboardingTour';
 import Modal from '../components/Modal';
 import { useNavigate } from 'react-router-dom';
-import { deckService } from '../services/deckService';
 
 interface DashboardProps {
   decks: Deck[];
+  isLoading: boolean;
+  error: string | null;
   onSelectDeck: (deckId: string, navigate: (path: string) => void) => void;
   onDeleteDeck: (deckId: string) => void;
   onDuplicateDeck: (deckId: string) => void;
 }
 
 const DeckCardMenu: React.FC<{ onDuplicate: () => void; onDelete: () => void; }> = ({ onDuplicate, onDelete }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
+    const [isOpen, setIsOpen] = React.useState(false);
+    const menuRef = React.useRef<HTMLDivElement>(null);
 
     // Close menu when clicking outside
-    useEffect(() => {
+    React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
@@ -99,51 +100,37 @@ const tourSteps = [
     { title: 'Manage Your Decks', content: 'Your created decks will appear here. You can edit, present, and share them anytime.' },
 ];
 
-const Dashboard: React.FC<DashboardProps> = ({ decks, onSelectDeck, onDeleteDeck, onDuplicateDeck }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [localDecks, setLocalDecks] = useState<Deck[]>(decks);
-  
-  // Use local state for tour to avoid re-triggering on prop changes
-  const [isTourOpen, setIsTourOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
+const Dashboard: React.FC<DashboardProps> = ({ decks, isLoading, error, onSelectDeck, onDeleteDeck, onDuplicateDeck }) => {
+  const [isTourOpen, setIsTourOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [deckToDelete, setDeckToDelete] = React.useState<Deck | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setIsLoading(true);
-    deckService.getDecks()
-        .then(fetchedDecks => {
-            setLocalDecks(fetchedDecks);
-            if (fetchedDecks.length === 0) {
-                setIsTourOpen(true);
-            }
-        })
-        .catch(() => setError("Could not load your decks. Please try again later."))
-        .finally(() => setIsLoading(false));
-  }, []); // Fetch decks only once on component mount
+  React.useEffect(() => {
+    if (!isLoading && decks.length === 0) {
+        setIsTourOpen(true);
+    }
+  }, [isLoading, decks]);
 
   const handleStartDeck = () => {
     navigate('/pitch-deck');
   };
 
-  const filteredDecks = useMemo(() => 
-    localDecks.filter(deck => 
+  const filteredDecks = React.useMemo(() => 
+    decks.filter(deck => 
         deck.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).sort((a, b) => b.lastEdited - a.lastEdited), 
-  [localDecks, searchQuery]);
+  [decks, searchQuery]);
 
   const handleDeleteConfirm = async () => {
       if(deckToDelete) {
           await onDeleteDeck(deckToDelete.id);
-          setLocalDecks(prev => prev.filter(d => d.id !== deckToDelete!.id));
           setDeckToDelete(null);
       }
   };
   
   const handleDuplicate = async (deckId: string) => {
-      const newDeck = await deckService.duplicateDeck(deckId);
-      setLocalDecks(prev => [newDeck, ...prev]);
+      await onDuplicateDeck(deckId);
   };
   
   return (
@@ -188,7 +175,7 @@ const Dashboard: React.FC<DashboardProps> = ({ decks, onSelectDeck, onDeleteDeck
                 <LoadingState />
             ) : error ? (
                  <div className="col-span-full text-center py-16 bg-red-50 text-red-700 rounded-xl">{error}</div>
-            ) : localDecks.length > 0 ? (
+            ) : decks.length > 0 ? (
                 filteredDecks.length > 0 ? (
                     filteredDecks.map(deck => (
                         <DeckCard 
