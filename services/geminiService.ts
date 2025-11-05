@@ -1,14 +1,20 @@
-
-import { Type, Modality } from "@google/genai";
 import { Slide } from '../types';
+import { supabase } from '../components/SupabaseClient';
 
-// The Supabase client and calls have been removed and replaced with a mock implementation
-// to allow the application to function without a live backend.
+// This service is now a thin client that invokes Supabase Edge Functions.
+// All Gemini API logic and keys are securely handled on the server-side.
 
 export const refineText = async (textToRefine: string, fieldName: string): Promise<string> => {
-  console.log(`Mock refining text for field: ${fieldName}`);
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate AI processing time
-  return `${textToRefine} (AI Refined)`;
+  const { data, error } = await supabase.functions.invoke('refine-text', {
+    body: { text: textToRefine, fieldName },
+  });
+
+  if (error) {
+    console.error(`Error refining text for ${fieldName}:`, error);
+    throw error;
+  }
+  
+  return data.refinedText;
 };
 
 export interface SlideSuggestion {
@@ -17,28 +23,32 @@ export interface SlideSuggestion {
 }
 
 export const generateSlideSuggestions = async (slide: Slide): Promise<SlideSuggestion | null> => {
-    console.log(`Mock generating suggestions for slide: ${slide.title}`);
-    await new Promise(resolve => setTimeout(resolve, 800)); // Simulate AI processing time
-    
-    // Don't suggest if content is too simple to avoid clutter
-    if (slide.content.length === 1 && slide.content[0].length < 20) {
-        return null;
+    const { data, error } = await supabase.functions.invoke('generate-slide-suggestions', {
+        body: { slide },
+    });
+
+    if (error) {
+        console.error(`Error generating suggestions for slide "${slide.title}":`, error);
+        throw error;
     }
 
-    return {
-        suggested_title: `Enhanced: ${slide.title}`,
-        suggested_content: slide.content.map(line => `• ${line}`).join('\n'),
-    };
+    return data.suggestion;
 };
 
 
 export const generateSlideImage = async (slideTitle: string, slideContent: string[]): Promise<string> => {
-    console.log(`Mock generating image for slide: ${slideTitle}`);
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate image generation time
-    // Use a seed to get consistent placeholder images for the same title
-    const seed = slideTitle.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return `https://picsum.photos/seed/${seed}/500/300`;
+    const { data, error } = await supabase.functions.invoke('generate-slide-image', {
+        body: { slideTitle, slideContent },
+    });
+    
+    if (error) {
+        console.error(`Error generating image for slide "${slideTitle}":`, error);
+        throw error;
+    }
+    
+    // The Edge Function is expected to return a URL, e.g., from Supabase Storage.
+    return data.imageUrl;
 };
 
-// NOTE: generateDeck has been moved to a Supabase Edge Function (`create-deck-with-images`)
-// and is now called directly from App.tsx. It is removed from this client-side service.
+// The `generateDeck` function is handled by the `create-deck-with-images` Edge Function,
+// which is invoked directly from App.tsx. It is no longer needed in this client-side service.

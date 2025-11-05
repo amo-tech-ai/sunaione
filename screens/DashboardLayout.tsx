@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { supabase } from '../components/SupabaseClient';
 import { 
     ChartBarIcon, SunIcon, UserCircleIcon, CalendarIcon, 
     TagIcon, BriefcaseIcon, CogIcon 
@@ -24,8 +25,39 @@ const NavItem: React.FC<{ to: string; icon: React.ElementType; label: string; }>
   );
 };
 
+const UserMenu: React.FC<{ onSignOut: () => void; userEmail?: string }> = ({ onSignOut, userEmail }) => {
+    return (
+        <div className="group relative">
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100">
+                <UserCircleIcon className="w-6 h-6" />
+                <span className="truncate flex-grow text-left">{userEmail || 'Loading...'}</span>
+            </button>
+            <div className="absolute bottom-full mb-2 w-full bg-white rounded-md shadow-lg z-10 border border-gray-200 hidden group-hover:block">
+                 <button onClick={onSignOut} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    );
+}
+
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState<string | undefined>();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUserEmail(user?.email);
+    };
+    fetchUser();
+  }, []);
+
+  const handleSignOut = async () => {
+      await supabase.auth.signOut();
+      navigate('/'); // Redirect to homepage after sign out
+  };
+
   return (
     <div className="min-h-screen flex bg-amo-beige">
       <aside className="w-64 bg-white p-4 border-r border-gray-200 flex-col hidden lg:flex">
@@ -41,7 +73,8 @@ const DashboardLayout: React.FC = () => {
           <NavItem to="/dashboard/my-events" icon={CalendarIcon} label="My Events" />
           <NavItem to="/jobs" icon={BriefcaseIcon} label="Job Board" />
         </nav>
-        <div className="mt-auto">
+        <div className="mt-auto space-y-2">
+            <UserMenu onSignOut={handleSignOut} userEmail={userEmail} />
             <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100">
                 <CogIcon className="w-5 h-5" /> Settings
             </button>

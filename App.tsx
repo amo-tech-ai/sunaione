@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useParams, Navigate, useNavigate } from 'react-router-dom';
-import { DeckData, Deck, Event, Perk, Job, Article, Slide } from './types';
+import { Session } from '@supabase/supabase-js';
+import { DeckData, Deck, Event, Perk, Job, Article } from './types';
 import { deckService } from './services/deckService';
+import { supabase } from './components/SupabaseClient';
 
 import WizardSteps from './screens/WizardSteps';
 import GeneratingScreen from './screens/GeneratingScreen';
@@ -22,6 +24,7 @@ import BlogScreen from './screens/BlogScreen';
 import ApplyScreen from './screens/ApplyScreen';
 import ApplySuccessScreen from './screens/ApplySuccessScreen';
 import PublicLayout from './screens/PublicLayout';
+import AuthScreen from './screens/AuthScreen';
 
 // --- Constants ---
 const WIZARD_DRAFT_KEY = 'amo_wizard_draft';
@@ -203,7 +206,8 @@ const ApplySuccessWrapper: React.FC<{ jobs: Job[] }> = ({ jobs }) => {
     return <ApplySuccessScreen job={job} />;
 };
 
-export const App: React.FC = () => {
+// Component to hold all authenticated routes
+const AppRoutes: React.FC = () => {
     const [decks, setDecks] = useState<Deck[]>([]);
     const [deckData, setDeckData] = useState<DeckData>(() => {
         try {
@@ -222,7 +226,7 @@ export const App: React.FC = () => {
 
     // Load initial decks from service on mount
     useEffect(() => {
-        deckService.getDecks().then(setDecks);
+        deckService.getDecks().then(setDecks).catch(console.error);
     }, []);
 
     // Save wizard draft to localStorage on change
@@ -237,42 +241,26 @@ export const App: React.FC = () => {
     const handleCreateDeck = async (newDeckData: DeckData, navigate: (path: string) => void) => {
         navigate('/pitch-deck/generating');
         
-        // Simulate async operation and deck generation from the backend
-        await new Promise(resolve => setTimeout(resolve, 2500));
-
         try {
-            console.log("Simulating deck creation from data:", newDeckData);
-            
-            // This simulates the behavior of the 'create-deck-with-images' Edge Function
-            const newDeck: Deck = {
-                id: `deck-${Date.now()}`,
-                name: newDeckData.companyName || 'Untitled Deck',
-                template: newDeckData.template,
-                lastEdited: Date.now(),
-                slides: [
-                    { title: 'Welcome', content: [`To the pitch for ${newDeckData.companyName}`], image: `https://picsum.photos/500/300?random=1` },
-                    { title: 'The Problem', content: newDeckData.problem.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=2` },
-                    { title: 'Our Solution', content: newDeckData.solution.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=3` },
-                    { title: 'Target Audience', content: newDeckData.targetAudience.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=4` },
-                    { title: 'Business Model', content: newDeckData.businessModel.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=5` },
-                    { title: 'Traction', content: newDeckData.traction.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=6` },
-                    { title: 'Our Team', content: newDeckData.teamMembers.split('\n').filter(Boolean), image: `https://picsum.photos/500/300?random=7` },
-                    { title: 'The Ask', content: [`We are seeking ${newDeckData.fundingAmount}.`, ...newDeckData.useOfFunds.split('\n').filter(Boolean)], image: `https://picsum.photos/500/300?random=8` },
-                    { title: 'Thank You', content: ['Any Questions?'], image: `https://picsum.photos/500/300?random=9` },
-                ].filter(slide => slide.content.length > 0 && !(slide.content.length === 1 && slide.content[0] === '')), // Remove empty slides
-            };
+            const { data, error } = await supabase.functions.invoke('create-deck-with-images', {
+                body: { deckData: newDeckData },
+            });
 
-            // Add to our mock store via the service, so it's persisted for the session
-            await deckService.addDeck(newDeck);
+            if (error) throw error;
+            if (!data.deckId) throw new Error("Deck creation failed: No deck ID returned.");
+
+            // Fetch the newly created deck to update the UI
+            const newDeck = await deckService.getDeckById(data.deckId);
+            if (!newDeck) throw new Error("Could not fetch the newly created deck.");
+            
             setDecks(prev => [...prev, newDeck]);
             
-            // Clear draft and reset form state after successful creation
             localStorage.removeItem(WIZARD_DRAFT_KEY);
             setDeckData(initialDeckData);
 
             navigate(`/dashboard/decks/${newDeck.id}/edit`);
         } catch (error) {
-            console.error("Failed to create mock deck:", error);
+            console.error("Failed to create deck:", error);
             alert("There was an error creating your deck. Please try again.");
             navigate('/pitch-deck');
         }
@@ -340,6 +328,31 @@ export const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     );
+}
+
+
+export const App: React.FC = () => {
+    const [session, setSession] = useState<Session | null>(null);
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+        });
+
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    if (!session) {
+        return <AuthScreen />;
+    } else {
+        return <AppRoutes />;
+    }
 };
 
 export default App;

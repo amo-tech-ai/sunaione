@@ -1,5 +1,7 @@
 // Fix: Replaced incorrect component code with actual type definitions.
 export interface Slide {
+  // Fix: Added optional `id` to slide to align with database schema and fix usage in deckService.
+  id?: string;
   title: string;
   content: string[];
   image?: string;

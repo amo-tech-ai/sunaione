@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Deck } from '../types';
-import { ArrowRightIcon, DocumentDuplicateIcon, SparklesIcon, SearchIcon, DotsVerticalIcon, TrashIcon } from '../components/Icons';
+import { ArrowRightIcon, DocumentDuplicateIcon, SparklesIcon, SearchIcon, DotsVerticalIcon, TrashIcon, LoaderIcon } from '../components/Icons';
 import OnboardingTour from '../components/OnboardingTour';
 import Modal from '../components/Modal';
 import { useNavigate } from 'react-router-dom';
+import { deckService } from '../services/deckService';
 
 interface DashboardProps {
   decks: Deck[];
@@ -85,6 +86,13 @@ const EmptyState: React.FC<{ onStart: () => void; isSearchResult?: boolean; }> =
     </div>
 );
 
+const LoadingState: React.FC = () => (
+    <div className="col-span-full flex flex-col items-center justify-center text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
+        <LoaderIcon className="w-12 h-12 text-amo-orange animate-spin" />
+        <p className="text-gray-600 mt-4 font-semibold">Loading your decks...</p>
+    </div>
+);
+
 const tourSteps = [
     { title: 'Welcome to AMO AI!', content: 'This is your dashboard where you can manage all your pitch decks.' },
     { title: 'Create Your First Deck', content: 'Click here to start the guided wizard. The AI will help you craft the perfect pitch.' },
@@ -92,26 +100,50 @@ const tourSteps = [
 ];
 
 const Dashboard: React.FC<DashboardProps> = ({ decks, onSelectDeck, onDeleteDeck, onDuplicateDeck }) => {
-  const [isTourOpen, setIsTourOpen] = useState(decks.length === 0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [localDecks, setLocalDecks] = useState<Deck[]>(decks);
+  
+  // Use local state for tour to avoid re-triggering on prop changes
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsLoading(true);
+    deckService.getDecks()
+        .then(fetchedDecks => {
+            setLocalDecks(fetchedDecks);
+            if (fetchedDecks.length === 0) {
+                setIsTourOpen(true);
+            }
+        })
+        .catch(() => setError("Could not load your decks. Please try again later."))
+        .finally(() => setIsLoading(false));
+  }, []); // Fetch decks only once on component mount
 
   const handleStartDeck = () => {
     navigate('/pitch-deck');
   };
 
   const filteredDecks = useMemo(() => 
-    decks.filter(deck => 
+    localDecks.filter(deck => 
         deck.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).sort((a, b) => b.lastEdited - a.lastEdited), 
-  [decks, searchQuery]);
+  [localDecks, searchQuery]);
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
       if(deckToDelete) {
-          onDeleteDeck(deckToDelete.id);
+          await onDeleteDeck(deckToDelete.id);
+          setLocalDecks(prev => prev.filter(d => d.id !== deckToDelete!.id));
           setDeckToDelete(null);
       }
+  };
+  
+  const handleDuplicate = async (deckId: string) => {
+      const newDeck = await deckService.duplicateDeck(deckId);
+      setLocalDecks(prev => [newDeck, ...prev]);
   };
   
   return (
@@ -152,14 +184,18 @@ const Dashboard: React.FC<DashboardProps> = ({ decks, onSelectDeck, onDeleteDeck
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {decks.length > 0 ? (
+            {isLoading ? (
+                <LoadingState />
+            ) : error ? (
+                 <div className="col-span-full text-center py-16 bg-red-50 text-red-700 rounded-xl">{error}</div>
+            ) : localDecks.length > 0 ? (
                 filteredDecks.length > 0 ? (
                     filteredDecks.map(deck => (
                         <DeckCard 
                             key={deck.id} 
                             deck={deck} 
                             onSelect={() => onSelectDeck(deck.id, navigate)} 
-                            onDuplicate={() => onDuplicateDeck(deck.id)}
+                            onDuplicate={() => handleDuplicate(deck.id)}
                             onDelete={() => setDeckToDelete(deck)}
                         />
                     ))
