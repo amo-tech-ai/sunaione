@@ -22,7 +22,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ eventId, events, 
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2">
-                    <img src={event.image} alt={event.title} className="w-full h-80 object-cover rounded-2xl shadow-lg mb-6" />
+                    <img src={event.image} alt={event.title} className="w-full h-60 md:h-80 object-cover rounded-2xl shadow-lg mb-6" />
                     <span className="bg-orange-100 text-amo-orange font-bold text-sm px-3 py-1 rounded-full">{event.category}</span>
                     <h1 className="text-4xl font-bold text-amo-dark my-4">{event.title}</h1>
                     <p className="text-lg text-gray-600 leading-relaxed">{event.description}</p>

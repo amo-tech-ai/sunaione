@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProgressBar from './ProgressBar';
 import { ArrowRightIcon, ChevronLeftIcon } from './Icons';
@@ -30,7 +29,7 @@ const WizardScreen: React.FC<WizardScreenProps> = ({
     <div className="min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 bg-amo-beige">
       <div className="w-full max-w-3xl mx-auto">
         <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
-        <div className="mt-8 bg-white rounded-xl shadow-lg border border-gray-200 p-8 md:p-12">
+        <div className="mt-8 bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-12">
           <h1 className="text-3xl md:text-4xl font-bold text-amo-dark mb-2">{title}</h1>
           <p className="text-gray-600 mb-8">{subtitle}</p>
           
@@ -38,7 +37,7 @@ const WizardScreen: React.FC<WizardScreenProps> = ({
             {children}
           </div>
 
-          <div className="mt-12 pt-6 border-t border-gray-200 flex justify-between items-center">
+          <div className="mt-12 pt-6 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-4">
             <button
               onClick={onBack}
               disabled={currentStep === 1}
@@ -49,7 +48,7 @@ const WizardScreen: React.FC<WizardScreenProps> = ({
             <button
               onClick={onNext}
               disabled={!canGoNext}
-              className="bg-amo-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-amo-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
             >
               {isLastStep ? 'Generate Deck' : 'Continue'} <ArrowRightIcon className="w-5 h-5" />
             </button>

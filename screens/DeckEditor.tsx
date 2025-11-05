@@ -13,7 +13,7 @@ interface DeckEditorProps {
 const Toast: React.FC<{ message: string; show: boolean; }> = ({ message, show }) => {
     if (!show) return null;
     return (
-        <div className="fixed bottom-8 right-8 bg-amo-dark text-white py-3 px-6 rounded-lg shadow-2xl flex items-center gap-3 animate-fade-in-up">
+        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 bg-amo-dark text-white py-3 px-6 rounded-lg shadow-2xl flex items-center gap-3 animate-fade-in-up z-50">
             <CheckCircleIcon className="w-6 h-6 text-green-400" />
             <span className="font-semibold">{message}</span>
         </div>
@@ -95,10 +95,10 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     const currentSlide = localDeck.slides[activeSlide];
 
     return (
-        <div className="flex h-screen bg-gray-100">
+        <div className="flex flex-col lg:flex-row h-screen bg-gray-100">
             <Toast message="Deck saved successfully!" show={showSaveToast} />
             {/* Sidebar for slide thumbnails */}
-            <aside className="w-64 bg-white p-4 flex flex-col overflow-y-auto border-r border-gray-200">
+            <aside className="w-full lg:w-64 bg-white p-4 flex flex-col overflow-y-auto border-b lg:border-r lg:border-b-0 border-gray-200">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-bold text-lg text-amo-dark">{localDeck.name}</h2>
                     <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:text-amo-orange">Exit</button>
@@ -122,33 +122,33 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
             </aside>
 
             {/* Main slide editor */}
-            <main className="flex-1 p-8 overflow-y-auto">
-                <div className="flex justify-end items-center gap-4 mb-4">
+            <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
+                <div className="flex flex-wrap justify-end items-center gap-2 sm:gap-4 mb-4">
                     <button 
                         onClick={() => alert('Share functionality is coming soon!')}
-                        className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+                        className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm sm:text-base">
                         <UserCircleIcon className="w-5 h-5"/> Share
                     </button>
                     <button 
                         onClick={() => navigate(`/dashboard/decks/${localDeck.id}/present`)}
-                        className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+                        className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm sm:text-base">
                         <EyeIcon className="w-5 h-5"/> Present
                     </button>
                      <button 
                         onClick={handleSave}
-                        className="bg-amo-orange text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
+                        className="bg-amo-orange text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2 text-sm sm:text-base">
                         <SaveIcon className="w-5 h-5"/> Save to AI Studio
                     </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8 h-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                     {/* Slide preview */}
-                    <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 flex flex-col justify-center items-center">
-                        <div className="aspect-video w-full bg-gray-50 rounded-lg flex flex-col justify-center p-8">
-                            <h1 className={`text-4xl font-bold mb-6 ${style.header}`}>{currentSlide.title}</h1>
+                    <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-8 flex flex-col justify-center items-center">
+                        <div className="aspect-video w-full bg-gray-50 rounded-lg flex flex-col justify-center p-4 sm:p-8">
+                            <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-6 ${style.header}`}>{currentSlide.title}</h1>
                             <ul className="space-y-3">
                                 {currentSlide.content.map((point, i) => (
-                                    <li key={i} className={`flex items-start gap-3 text-lg ${style.body}`}>
+                                    <li key={i} className={`flex items-start gap-3 text-base sm:text-lg ${style.body}`}>
                                         <span className={`mt-1.5 flex-shrink-0 w-2.5 h-2.5 rounded-full ${style.bullet}`}></span>
                                         {point}
                                     </li>

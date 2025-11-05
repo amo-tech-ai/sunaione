@@ -65,7 +65,7 @@ const HomePage: React.FC<HomePageProps> = () => {
       </div>
 
       {/* How It Works Section */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             <HowItWorksCard icon={LightBulbIcon} title="Input Your Idea">
                 Tell us about your startup. We’ll ask a few questions about your business, problem, solution, and market.
@@ -80,38 +80,36 @@ const HomePage: React.FC<HomePageProps> = () => {
       </section>
 
       {/* Deck Preview Section */}
-      <section className="py-20 px-8 bg-white/50">
+      <section className="py-20 px-4 sm:px-8 bg-white/50">
         <div className="max-w-6xl mx-auto text-center">
             <h2 className="text-4xl font-bold font-poppins text-amo-teal-dark">See what your Deck will look like</h2>
             <p className="text-lg text-gray-600 mt-2">Professional slides generated instantly.</p>
         </div>
-        <div className="max-w-5xl mx-auto mt-12 grid grid-cols-3 grid-rows-2 gap-6">
-            <div className="col-span-2 row-span-2 bg-[#3A7D91] p-8 rounded-2xl text-white">
+        <div className="max-w-5xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 md:row-span-2 bg-[#3A7D91] p-8 rounded-2xl text-white">
                 <h3 className="text-3xl font-bold">Marketing Proposal</h3>
                 <p>The best team providing the best services for your company's growth.</p>
                 <p className="mt-24 font-bold text-xl">Your Logo</p>
             </div>
-            <div className="col-span-1 bg-gray-100 p-6 rounded-2xl">
+            <div className="md:col-span-1 bg-gray-100 p-6 rounded-2xl">
                 <p className="font-semibold text-sm">01 Introduction</p>
                 <p className="font-semibold text-sm">02 The Problem</p>
                 <p className="font-semibold text-sm">03 The Solution</p>
             </div>
-            <div className="col-span-1 bg-gray-100 p-6 rounded-2xl flex flex-col items-center justify-center">
+            <div className="md:col-span-1 bg-gray-100 p-6 rounded-2xl flex flex-col items-center justify-center">
                 <div className="w-16 h-16 bg-gray-300 rounded-full mb-2"></div>
                 <p className="font-bold">Simon Robbs, CEO</p>
                 <p className="text-sm text-gray-500">Founder & Visionary</p>
             </div>
-        </div>
-        <div className="max-w-5xl mx-auto mt-6 grid grid-cols-3 gap-6">
-             <div className="col-span-1 bg-white p-6 rounded-2xl border border-gray-200">
+             <div className="md:col-span-1 bg-white p-6 rounded-2xl border border-gray-200">
                 <p className="font-bold">Competitor 1</p>
                 <p className="text-sm text-gray-500">Strengths: Market Leader</p>
             </div>
-            <div className="col-span-1 bg-white p-6 rounded-2xl border border-gray-200">
+            <div className="md:col-span-1 bg-white p-6 rounded-2xl border border-gray-200">
                 <p className="font-bold">Competitor 2</p>
                 <p className="text-sm text-gray-500">Weakness: Slow adoption</p>
             </div>
-            <div className="col-span-1 bg-[#3A7D91] p-6 rounded-2xl text-white">
+            <div className="md:col-span-1 bg-[#3A7D91] p-6 rounded-2xl text-white">
                 <p className="font-semibold text-sm">02</p>
                 <p className="font-bold text-xl">Team</p>
             </div>
@@ -119,7 +117,7 @@ const HomePage: React.FC<HomePageProps> = () => {
       </section>
 
       {/* Metrics & Trust */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                 <div>
@@ -147,7 +145,7 @@ const HomePage: React.FC<HomePageProps> = () => {
       </section>
 
       {/* Path to Success */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-bold font-poppins text-amo-teal-dark">Your path to Pitch Success</h2>
             <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -160,7 +158,7 @@ const HomePage: React.FC<HomePageProps> = () => {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-4 sm:px-8">
          <div className="max-w-2xl mx-auto text-center">
              <h2 className="text-4xl font-bold font-poppins text-amo-teal-dark">Ready to Pitch with Confidence?</h2>
              <p className="text-lg text-gray-600 mt-4 mb-8">Join thousands of founders who've raised funding with AI-powered pitch decks.</p>

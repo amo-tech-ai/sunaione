@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 // FIX: Removed unused 'Screen' type import.
 import { UserProfile, VerificationStatus, Skill, Experience } from '../types';
@@ -73,9 +71,9 @@ const ProfileOverviewCard: React.FC<{ user: UserProfile }> = ({ user }) => (
                     {user.tags.map(tag => <span key={tag} className="text-xs font-semibold px-2 py-1 rounded-full bg-orange-100 text-amo-orange">{tag}</span>)}
                 </div>
             </div>
-            <div className="flex-shrink-0 flex items-center gap-2">
-                 <button className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors">Edit Profile</button>
-                 <button className="bg-amo-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-black transition-all">Preview</button>
+            <div className="flex-shrink-0 flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                 <button className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto">Edit Profile</button>
+                 <button className="bg-amo-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-black transition-all w-full sm:w-auto">Preview</button>
             </div>
         </div>
         <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">

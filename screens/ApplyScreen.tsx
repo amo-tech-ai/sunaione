@@ -263,16 +263,16 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job }) => {
                                 </div>
                             )}
 
-                            <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+                            <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-4">
                                 <button type="button" onClick={handleBack} disabled={step === 1} className="text-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center gap-2 disabled:opacity-50">
                                     <ChevronLeftIcon className="w-5 h-5"/> Back
                                 </button>
                                 {step < 3 ? (
-                                    <button type="button" onClick={handleNext} disabled={isNextDisabled()} className="bg-amo-orange text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 disabled:bg-gray-400">
+                                    <button type="button" onClick={handleNext} disabled={isNextDisabled()} className="w-full sm:w-auto justify-center bg-amo-orange text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 disabled:bg-gray-400">
                                         Next <ArrowRightIcon className="w-5 h-5"/>
                                     </button>
                                 ) : (
-                                    <button type="submit" className="bg-amo-orange text-white font-bold py-2 px-6 rounded-lg">Submit Application</button>
+                                    <button type="submit" className="w-full sm:w-auto justify-center bg-amo-orange text-white font-bold py-2 px-6 rounded-lg">Submit Application</button>
                                 )}
                             </div>
                         </form>
