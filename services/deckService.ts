@@ -1,4 +1,4 @@
-import { Deck, Slide } from '../types';
+import { Deck, Slide, TemplateID } from '../types';
 import { supabase } from '../components/SupabaseClient';
 
 // This service now interacts directly with the Supabase database.
@@ -26,11 +26,26 @@ export const deckService = {
             throw error;
         }
 
-        // The slides are nested; let's sort them by position
-        return data.map(deck => ({
-            ...deck,
-            slides: deck.slides.sort((a: any, b: any) => a.position - b.position)
-        }));
+        // FIX: Explicitly map all fields, including nested slides, to their respective interfaces.
+        // This prevents passing raw DB objects with extra fields that can cause React rendering errors.
+        return (data || []).map((dbDeck): Deck => {
+            const lastEdited = dbDeck.lastEdited || dbDeck.last_edited || Date.now();
+            return {
+                id: dbDeck.id,
+                name: dbDeck.name,
+                lastEdited: typeof lastEdited === 'number' ? lastEdited : Date.now(),
+                template: (dbDeck.template || 'startup') as TemplateID,
+                slides: (dbDeck.slides || []).map((slide: any): Slide => ({
+                    id: slide.id,
+                    title: slide.title || '',
+                    content: Array.isArray(slide.content) ? slide.content : (slide.content ? [slide.content] : []),
+                    image: slide.image || slide.imageUrl || undefined,
+                    imageLoading: slide.imageLoading || undefined
+                })).sort((a: any, b: any) => (a.position || 0) - (b.position || 0)),
+                visualThemeDescription: dbDeck.visualThemeDescription || undefined,
+                visualThemeBrief: dbDeck.visualThemeBrief || undefined
+            };
+        });
     },
 
     async getDeckById(deckId: string): Promise<Deck | null> {
@@ -44,14 +59,27 @@ export const deckService = {
             .eq('user_id', session.user.id)
             .single();
 
-        if (error) {
+        if (error || !data) {
             console.error("Error fetching single deck:", error);
             return null;
         }
 
+        // FIX: Explicitly map all fields, including nested slides, to their respective interfaces.
+        const lastEdited = data.lastEdited || data.last_edited || Date.now();
         return {
-            ...data,
-            slides: data.slides.sort((a: any, b: any) => a.position - b.position)
+            id: data.id,
+            name: data.name,
+            lastEdited: typeof lastEdited === 'number' ? lastEdited : Date.now(),
+            template: (data.template || 'startup') as TemplateID,
+            slides: (data.slides || []).map((slide: any): Slide => ({
+                id: slide.id,
+                title: slide.title || '',
+                content: Array.isArray(slide.content) ? slide.content : (slide.content ? [slide.content] : []),
+                image: slide.image || slide.imageUrl || undefined,
+                imageLoading: slide.imageLoading || undefined
+            })).sort((a: any, b: any) => (a.position || 0) - (b.position || 0)),
+            visualThemeDescription: data.visualThemeDescription || undefined,
+            visualThemeBrief: data.visualThemeBrief || undefined
         };
     },
 
