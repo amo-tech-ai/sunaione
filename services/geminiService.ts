@@ -218,7 +218,8 @@ If the user asks to "change this slide", assume they mean the currently active s
             console.error(`Invalid position argument for addSlide: ${args.position}. Aborting function call.`);
             continue;
         }
-        const newSlide: Slide = { title: args.title || 'New Slide', content: args.content || [] };
+        // FIX: Cast arguments from function call to their expected types.
+        const newSlide: Slide = { title: (args.title as string) || 'New Slide', content: (args.content as string[]) || [] };
         modifiedDeck.slides.splice(args.position, 0, newSlide);
         break;
       case 'deleteSlide':
@@ -231,8 +232,9 @@ If the user asks to "change this slide", assume they mean the currently active s
       case 'updateSlide':
         const slideToUpdate = modifiedDeck.slides[args.position];
         if (slideToUpdate) {
-            if (args.title) slideToUpdate.title = args.title;
-            if (args.content) slideToUpdate.content = args.content;
+            // FIX: Cast arguments from function call to their expected types.
+            if (args.title) slideToUpdate.title = args.title as string;
+            if (args.content) slideToUpdate.content = args.content as string[];
             modifiedDeck.slides[args.position] = slideToUpdate;
         } else {
              console.error(`Slide at position ${args.position} not found for update.`);
