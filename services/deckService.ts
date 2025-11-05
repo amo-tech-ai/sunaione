@@ -4,6 +4,44 @@ import { supabase } from '../components/SupabaseClient';
 // This service now interacts directly with the Supabase database.
 // All operations are scoped to the authenticated user.
 
+// Helper function to robustly map database objects to the Deck interface,
+// preventing malformed data from reaching React components.
+const mapDbDeckToDeck = (dbDeck: any): Deck => {
+    // Handle potential snake_case from Supabase and different date formats
+    const lastEditedValue = dbDeck.lastEdited || dbDeck.last_edited;
+    const lastEdited = lastEditedValue ? new Date(lastEditedValue).getTime() : Date.now();
+
+    const slides = (dbDeck.slides || []).map((slide: any): Slide => {
+        let content: string[];
+        if (Array.isArray(slide.content)) {
+            // Ensure all elements are strings, filtering out nulls/undefineds
+            content = slide.content.filter((item: any) => item !== null && item !== undefined).map(String);
+        } else if (slide.content !== null && slide.content !== undefined) {
+            content = [String(slide.content)];
+        } else {
+            content = [];
+        }
+        
+        return {
+            id: slide.id,
+            title: slide.title || '',
+            content,
+            image: slide.image || slide.imageUrl || undefined,
+        };
+    }).sort((a: any, b: any) => (a.position || 0) - (b.position || 0));
+    
+    return {
+        id: dbDeck.id,
+        name: dbDeck.name || 'Untitled Deck',
+        lastEdited,
+        template: (dbDeck.template || 'startup') as TemplateID,
+        slides,
+        visualThemeDescription: dbDeck.visualThemeDescription || dbDeck.visual_theme_description,
+        visualThemeBrief: dbDeck.visualThemeBrief || dbDeck.visual_theme_brief,
+    };
+};
+
+
 export const deckService = {
     async getDecks(searchQuery?: string): Promise<Deck[]> {
         const { data: { session } } = await supabase.auth.getSession();
@@ -26,26 +64,7 @@ export const deckService = {
             throw error;
         }
 
-        // FIX: Explicitly map all fields, including nested slides, to their respective interfaces.
-        // This prevents passing raw DB objects with extra fields that can cause React rendering errors.
-        return (data || []).map((dbDeck): Deck => {
-            const lastEdited = dbDeck.lastEdited || dbDeck.last_edited || Date.now();
-            return {
-                id: dbDeck.id,
-                name: dbDeck.name,
-                lastEdited: typeof lastEdited === 'number' ? lastEdited : Date.now(),
-                template: (dbDeck.template || 'startup') as TemplateID,
-                slides: (dbDeck.slides || []).map((slide: any): Slide => ({
-                    id: slide.id,
-                    title: slide.title || '',
-                    content: Array.isArray(slide.content) ? slide.content : (slide.content ? [slide.content] : []),
-                    image: slide.image || slide.imageUrl || undefined,
-                    imageLoading: slide.imageLoading || undefined
-                })).sort((a: any, b: any) => (a.position || 0) - (b.position || 0)),
-                visualThemeDescription: dbDeck.visualThemeDescription || undefined,
-                visualThemeBrief: dbDeck.visualThemeBrief || undefined
-            };
-        });
+        return (data || []).map(mapDbDeckToDeck);
     },
 
     async getDeckById(deckId: string): Promise<Deck | null> {
@@ -64,23 +83,7 @@ export const deckService = {
             return null;
         }
 
-        // FIX: Explicitly map all fields, including nested slides, to their respective interfaces.
-        const lastEdited = data.lastEdited || data.last_edited || Date.now();
-        return {
-            id: data.id,
-            name: data.name,
-            lastEdited: typeof lastEdited === 'number' ? lastEdited : Date.now(),
-            template: (data.template || 'startup') as TemplateID,
-            slides: (data.slides || []).map((slide: any): Slide => ({
-                id: slide.id,
-                title: slide.title || '',
-                content: Array.isArray(slide.content) ? slide.content : (slide.content ? [slide.content] : []),
-                image: slide.image || slide.imageUrl || undefined,
-                imageLoading: slide.imageLoading || undefined
-            })).sort((a: any, b: any) => (a.position || 0) - (b.position || 0)),
-            visualThemeDescription: data.visualThemeDescription || undefined,
-            visualThemeBrief: data.visualThemeBrief || undefined
-        };
+        return mapDbDeckToDeck(data);
     },
 
     async saveDeck(deckToSave: Deck): Promise<Deck> {
