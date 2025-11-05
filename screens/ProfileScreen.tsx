@@ -1,10 +1,8 @@
 import React from 'react';
-// FIX: Removed unused 'Screen' type import.
 import { UserProfile, VerificationStatus, Skill, Experience } from '../types';
 import { 
     UserCircleIcon, SparklesIcon, EyeIcon, UploadIcon, CheckCircleIcon, 
     LinkedInIcon, GitHubIcon, GlobeAltIcon, ExclamationTriangleIcon,
-    // Fix: Added missing LoaderIcon import.
     LoaderIcon,
     RocketIcon
 } from '../components/Icons';
@@ -96,8 +94,6 @@ const VerificationStatusCard: React.FC<{ verification: UserProfile['verification
             <h3 className="text-lg font-bold text-amo-dark mb-4">Verification Status</h3>
             <div className="space-y-3">
                 {Object.entries(verification).map(([platform, status]) => {
-                    // Fix: The `status` from `Object.entries` is of type `unknown`.
-                    // Cast it to `VerificationStatus` to use it as a valid index for `statusMap`.
                     const typedStatus = status as VerificationStatus;
                     const statusInfo = statusMap[typedStatus];
 

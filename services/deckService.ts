@@ -102,9 +102,6 @@ export const deckService = {
         // We need to delete slides that are no longer in the deck
         const slideIdsToKeep = slides.map(s => s.id).filter(Boolean);
         
-        // Fix: The previous logic failed to delete slides if the user removed all of them.
-        // This updated logic ensures that any slide in the database not present
-        // in the current `slides` array is removed.
         const deleteQuery = supabase
             .from('slides')
             .delete()
@@ -177,7 +174,6 @@ export const deckService = {
         
         const newDeckId = `deck-${Date.now()}`;
         
-        // Fix: Destructure slides from originalDeck to prevent attempting to insert them into the 'decks' table.
         const { slides, ...originalDeckData } = originalDeck;
 
         // Create the new deck record

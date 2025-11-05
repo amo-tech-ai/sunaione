@@ -1,6 +1,7 @@
-// Fix: Replaced incorrect component code with actual type definitions.
+// types.ts
+// Defines the core data structures used throughout the AMO AI application.
+
 export interface Slide {
-  // Fix: Added optional `id` to slide to align with database schema and fix usage in deckService.
   id?: string;
   title: string;
   content: string[];
