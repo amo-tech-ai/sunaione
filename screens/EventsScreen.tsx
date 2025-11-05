@@ -2,6 +2,8 @@ import React from 'react';
 import { Event } from '../types';
 import { CalendarIcon, MapPinIcon, UsersIcon } from '../components/Icons';
 import { useNavigate } from 'react-router-dom';
+import { PublicHeader } from './HomePage';
+import Footer from '../components/Footer';
 
 interface EventsScreenProps {
     events: Event[];
@@ -52,21 +54,27 @@ const EventsScreen: React.FC<EventsScreenProps> = ({ events, onRegisterToggle })
     };
 
     return (
-        <div>
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-amo-dark">Browse Events</h1>
-                <p className="text-gray-600 mt-1">Discover workshops, conferences, and networking opportunities.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {events.map(event => (
-                    <EventCard 
-                        key={event.id} 
-                        event={event} 
-                        onViewDetails={onViewDetails}
-                        onRegisterToggle={onRegisterToggle}
-                    />
-                ))}
-            </div>
+        <div className="bg-amo-beige min-h-screen">
+            <PublicHeader />
+            <main className="pt-24 pb-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="mb-8 text-center">
+                        <h1 className="text-4xl font-bold text-amo-dark">Browse Events</h1>
+                        <p className="text-gray-600 mt-1">Discover workshops, conferences, and networking opportunities.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {events.map(event => (
+                            <EventCard 
+                                key={event.id} 
+                                event={event} 
+                                onViewDetails={onViewDetails}
+                                onRegisterToggle={onRegisterToggle}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </main>
+            <Footer />
         </div>
     );
 };

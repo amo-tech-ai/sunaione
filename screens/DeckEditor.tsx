@@ -22,32 +22,28 @@ const Toast: React.FC<{ message: string; show: boolean; }> = ({ message, show })
 
 
 const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
+    const [localDeck, setLocalDeck] = useState<Deck>(deck);
     const [activeSlide, setActiveSlide] = useState(0);
     const [isRewriting, setIsRewriting] = useState(false);
     const [showSaveToast, setShowSaveToast] = useState(false);
     const navigate = useNavigate();
 
+    // Sync local state if the incoming deck prop changes
     useEffect(() => {
-        // Automatically save when the deck state changes from interactions
-        if (deck) {
-            const timer = setTimeout(() => {
-                // The actual save is handled by the wrapper component `DeckEditorWrapper`
-                // This effect just triggers the toast
-            }, 500);
-            return () => clearTimeout(timer);
-        }
+        setLocalDeck(deck);
     }, [deck]);
-    
-    const handleShowSaveToast = () => {
+
+    const handleSave = () => {
+        setDeck({ ...localDeck, lastEdited: Date.now() });
         setShowSaveToast(true);
         setTimeout(() => setShowSaveToast(false), 3000);
     }
 
-    if (!deck) {
+    if (!localDeck) {
         return <div className="p-8">Error: No deck loaded.</div>;
     }
     
-    const style = templateStyles[deck.template || 'startup'];
+    const style = templateStyles[localDeck.template || 'startup'];
 
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newContent = e.target.value.split('\n');
@@ -55,14 +51,14 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     };
 
     const updateSlide = (index: number, newSlideData: Partial<Slide>) => {
-        const newSlides = [...deck.slides];
+        const newSlides = [...localDeck.slides];
         newSlides[index] = { ...newSlides[index], ...newSlideData, imageLoading: newSlideData.image === undefined ? newSlides[index].imageLoading : false };
-        setDeck({ ...deck, slides: newSlides, lastEdited: Date.now() });
+        setLocalDeck({ ...localDeck, slides: newSlides });
     };
     
     const handleRewrite = async () => {
         setIsRewriting(true);
-        const originalContent = deck.slides[activeSlide].content.join('\n');
+        const originalContent = localDeck.slides[activeSlide].content.join('\n');
         try {
             const rewritten = await rewriteSlideContent(originalContent);
             updateSlide(activeSlide, { content: rewritten.split('\n') });
@@ -74,7 +70,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     };
     
     const handleGenerateImage = async () => {
-        const slide = deck.slides[activeSlide];
+        const slide = localDeck.slides[activeSlide];
         updateSlide(activeSlide, { imageLoading: true });
         try {
             const imageUrl = await generateSlideImage(slide.title, slide.content);
@@ -90,13 +86,13 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
             title: 'New Slide',
             content: ['Add your content here.'],
         };
-        const newSlides = [...deck.slides, newSlide];
-        setDeck({ ...deck, slides: newSlides, lastEdited: Date.now() });
+        const newSlides = [...localDeck.slides, newSlide];
+        setLocalDeck({ ...localDeck, slides: newSlides });
         setActiveSlide(newSlides.length - 1);
     };
 
 
-    const currentSlide = deck.slides[activeSlide];
+    const currentSlide = localDeck.slides[activeSlide];
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -104,11 +100,11 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
             {/* Sidebar for slide thumbnails */}
             <aside className="w-64 bg-white p-4 flex flex-col overflow-y-auto border-r border-gray-200">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-bold text-lg text-amo-dark">{deck.name}</h2>
+                    <h2 className="font-bold text-lg text-amo-dark">{localDeck.name}</h2>
                     <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:text-amo-orange">Exit</button>
                 </div>
                 <div className="space-y-2 flex-grow">
-                    {deck.slides.map((slide, index) => (
+                    {localDeck.slides.map((slide, index) => (
                         <div
                             key={index}
                             onClick={() => setActiveSlide(index)}
@@ -134,12 +130,12 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                         <UserCircleIcon className="w-5 h-5"/> Share
                     </button>
                     <button 
-                        onClick={() => navigate(`/dashboard/decks/${deck.id}/present`)}
+                        onClick={() => navigate(`/dashboard/decks/${localDeck.id}/present`)}
                         className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
                         <EyeIcon className="w-5 h-5"/> Present
                     </button>
                      <button 
-                        onClick={handleShowSaveToast}
+                        onClick={handleSave}
                         className="bg-amo-orange text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
                         <SaveIcon className="w-5 h-5"/> Save to AI Studio
                     </button>

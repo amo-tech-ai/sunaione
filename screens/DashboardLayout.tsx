@@ -7,7 +7,8 @@ import {
 
 const NavItem: React.FC<{ to: string; icon: React.ElementType; label: string; }> = ({ to, icon: Icon, label }) => {
   const location = useLocation();
-  const isActive = location.pathname === to;
+  const isActive = location.pathname === to || (to === '/dashboard' && location.pathname.startsWith('/dashboard/decks'));
+  
   return (
     <Link
       to={to}
@@ -36,9 +37,8 @@ const DashboardLayout: React.FC = () => {
         </div>
         <nav className="flex-grow space-y-1.5">
           <NavItem to="/dashboard" icon={ChartBarIcon} label="Dashboard" />
-          <NavItem to="/profile" icon={UserCircleIcon} label="Profile" />
-          <NavItem to="/my-events" icon={CalendarIcon} label="My Events" />
-          <NavItem to="/perks" icon={TagIcon} label="Perks" />
+          <NavItem to="/dashboard/profile" icon={UserCircleIcon} label="Profile" />
+          <NavItem to="/dashboard/my-events" icon={CalendarIcon} label="My Events" />
           <NavItem to="/jobs" icon={BriefcaseIcon} label="Job Board" />
         </nav>
         <div className="mt-auto">

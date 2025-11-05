@@ -1,20 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { TwitterIcon, LinkedInIcon, GitHubIcon } from './Icons';
+import { FooterLogo } from './Logo';
 
 interface FooterProps {}
-
-const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
-    <div className={`flex items-center gap-3 font-poppins font-bold text-xl ${className}`}>
-        <div className="bg-white p-1.5 rounded-md flex items-center justify-center w-8 h-8">
-            <svg viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-amo-teal-dark">
-                <path d="M8 1L0 13H2.5L4.5 8H11.5L13.5 13H16L8 1ZM5.5 6.5L8 2.5L10.5 6.5H5.5Z" fill="currentColor"/>
-            </svg>
-        </div>
-        <span>AMO AI</span>
-    </div>
-);
-
 
 const Footer: React.FC<FooterProps> = () => {
   return (
@@ -22,7 +11,7 @@ const Footer: React.FC<FooterProps> = () => {
       <div className="max-w-7xl mx-auto py-12 px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-                <AmoAILogo className="text-white" />
+                <FooterLogo />
                 <p className="mt-4 text-gray-400 text-sm">
                     Create Investor-Ready Pitch Decks in Minutes.
                 </p>

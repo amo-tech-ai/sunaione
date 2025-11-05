@@ -2,26 +2,16 @@ import React from 'react';
 import { LightBulbIcon, CogIcon, PaletteIcon, StarIcon } from '../components/Icons';
 import Footer from '../components/Footer';
 import { useNavigate } from 'react-router-dom';
+import { AmoAILogo } from '../components/Logo';
 
 interface HomePageProps {}
-
-const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
-    <div className={`flex items-center gap-3 font-poppins font-bold text-2xl text-amo-teal-dark ${className}`}>
-        <div className="bg-amo-teal-dark p-1.5 rounded-md flex items-center justify-center w-9 h-9">
-            <svg viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-white">
-                <path d="M8 1L0 13H2.5L4.5 8H11.5L13.5 13H16L8 1ZM5.5 6.5L8 2.5L10.5 6.5H5.5Z" fill="currentColor"/>
-            </svg>
-        </div>
-        <span>AMO AI</span>
-    </div>
-);
 
 export const PublicHeader: React.FC = () => {
     const navigate = useNavigate();
     return (
         <header className="absolute top-0 left-0 right-0 z-10 py-4 px-8 flex justify-between items-center">
             <button onClick={() => navigate('/')} aria-label="Home">
-                <AmoAILogo />
+                <AmoAILogo className="text-amo-teal-dark" />
             </button>
             <button
                 onClick={() => navigate('/create-deck')}

@@ -23,6 +23,22 @@ import BlogScreen from './screens/BlogScreen';
 import ApplyScreen from './screens/ApplyScreen';
 import ApplySuccessScreen from './screens/ApplySuccessScreen';
 
+// --- Constants ---
+const WIZARD_DRAFT_KEY = 'amo_wizard_draft';
+const initialDeckData: DeckData = {
+    companyName: '',
+    problem: '',
+    solution: '',
+    targetAudience: '',
+    businessModel: '',
+    traction: '',
+    teamMembers: '',
+    fundingAmount: '',
+    useOfFunds: '',
+    template: 'startup',
+};
+
+
 // --- Mock Data ---
 // Initial decks are now loaded from the service, which might be seeded from localStorage.
 const initialEvents: Event[] = [
@@ -191,18 +207,14 @@ const ApplySuccessWrapper: React.FC<{ jobs: Job[] }> = ({ jobs }) => {
 
 export const App: React.FC = () => {
     const [decks, setDecks] = useState<Deck[]>([]);
-    const [generating, setGenerating] = useState(false);
-    const [deckData, setDeckData] = useState<DeckData>({
-        companyName: '',
-        problem: '',
-        solution: '',
-        targetAudience: '',
-        businessModel: '',
-        traction: '',
-        teamMembers: '',
-        fundingAmount: '',
-        useOfFunds: '',
-        template: 'startup',
+    const [deckData, setDeckData] = useState<DeckData>(() => {
+        try {
+            const savedDraft = localStorage.getItem(WIZARD_DRAFT_KEY);
+            return savedDraft ? JSON.parse(savedDraft) : initialDeckData;
+        } catch (error) {
+            console.error("Failed to load wizard draft:", error);
+            return initialDeckData;
+        }
     });
     
     const [events, setEvents] = useState<Event[]>(initialEvents);
@@ -210,39 +222,59 @@ export const App: React.FC = () => {
     const [jobs] = useState<Job[]>(initialJobs);
     const [articles] = useState<Article[]>(initialArticles);
 
+    // Load initial decks from service on mount
     useEffect(() => {
-        // Load initial decks from the service on mount
         deckService.getDecks().then(setDecks);
     }, []);
+
+    // Save wizard draft to localStorage on change
+    useEffect(() => {
+        try {
+            localStorage.setItem(WIZARD_DRAFT_KEY, JSON.stringify(deckData));
+        } catch (error) {
+            console.error("Failed to save wizard draft:", error);
+        }
+    }, [deckData]);
     
     const handleCreateDeck = async (newDeckData: DeckData, navigate: (path: string) => void) => {
-        setGenerating(true);
-        const newSlides: Slide[] = await generateDeck(newDeckData);
-
-        const slidesWithImagesPromises = newSlides.map(async (slide) => {
-            try {
-                const imageUrl = await generateSlideImage(slide.title, slide.content);
-                return { ...slide, image: imageUrl };
-            } catch (error) {
-                console.error("Failed to generate image for slide:", slide.title, error);
-                return slide;
-            }
-        });
-
-        const slidesWithImages = await Promise.all(slidesWithImagesPromises);
-
-        const newDeck: Deck = {
-            id: `deck-${Date.now()}`,
-            name: newDeckData.companyName || 'Untitled Deck',
-            slides: slidesWithImages,
-            lastEdited: Date.now(),
-            template: newDeckData.template,
-        };
+        navigate('/generating');
         
-        await deckService.createDeck(newDeck);
-        setDecks(prev => [...prev, newDeck]);
-        setGenerating(false);
-        navigate(`/dashboard/decks/${newDeck.id}/edit`);
+        try {
+            const newSlides: Slide[] = await generateDeck(newDeckData);
+
+            const slidesWithImagesPromises = newSlides.map(async (slide) => {
+                try {
+                    const imageUrl = await generateSlideImage(slide.title, slide.content);
+                    return { ...slide, image: imageUrl };
+                } catch (error) {
+                    console.error("Failed to generate image for slide:", slide.title, error);
+                    return slide;
+                }
+            });
+
+            const slidesWithImages = await Promise.all(slidesWithImagesPromises);
+
+            const newDeck: Deck = {
+                id: `deck-${Date.now()}`,
+                name: newDeckData.companyName || 'Untitled Deck',
+                slides: slidesWithImages,
+                lastEdited: Date.now(),
+                template: newDeckData.template,
+            };
+            
+            await deckService.createDeck(newDeck);
+            setDecks(prev => [...prev, newDeck]);
+            
+            // Clear draft and reset form state after successful creation
+            localStorage.removeItem(WIZARD_DRAFT_KEY);
+            setDeckData(initialDeckData);
+
+            navigate(`/dashboard/decks/${newDeck.id}/edit`);
+        } catch (error) {
+            console.error("Failed to create deck:", error);
+            // Navigate back to the wizard on failure
+            navigate('/create-deck');
+        }
     };
 
     const handleSelectDeck = (deckId: string, navigate: (path: string) => void) => {
@@ -275,32 +307,33 @@ export const App: React.FC = () => {
         );
     };
 
-    if (generating) {
-        return <GeneratingScreen />;
-    }
-
     return (
         <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/create-deck" element={<WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleCreateDeck} />} />
+            <Route path="/generating" element={<GeneratingScreen />} />
             
-            <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<Dashboard decks={decks} onSelectDeck={handleSelectDeck} onDeleteDeck={handleDeleteDeck} onDuplicateDeck={handleDuplicateDeck} />} />
-                <Route path="profile" element={<ProfileScreen />} />
-                <Route path="my-events" element={<MyEventsScreen events={events} />} />
-                <Route path="perks" element={<PerksScreen perks={perks} />} />
-                <Route path="events" element={<EventsScreen events={events} onRegisterToggle={handleRegisterToggle} />} />
-                <Route path="jobs" element={<JobBoardScreen jobs={jobs} />} />
-                <Route path="decks/:id/edit" element={<DeckEditorWrapper decks={decks} setDecks={setDecks} />} />
-                <Route path="decks/:id/present" element={<PresentationWrapper decks={decks} />} />
-            </Route>
-            
+            <Route path="/events" element={<EventsScreen events={events} onRegisterToggle={handleRegisterToggle} />} />
             <Route path="/events/:eventId" element={<EventDetailWrapper events={events} onRegisterToggle={handleRegisterToggle} />} />
+            
+            <Route path="/perks" element={<PerksScreen perks={perks} />} />
             <Route path="/perks/:perkId" element={<PerkDetailWrapper perks={perks} />} />
+
+            <Route path="/jobs" element={<JobBoardScreen jobs={jobs} />} />
             <Route path="/jobs/post" element={<PostAJobScreen />} />
             <Route path="/jobs/:jobId/apply" element={<ApplyWrapper jobs={jobs} />} />
             <Route path="/jobs/:jobId/apply/success" element={<ApplySuccessWrapper jobs={jobs} />} />
             <Route path="/blog" element={<BlogScreen articles={articles} />} />
+
+            {/* Authenticated Dashboard Routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<Dashboard decks={decks} onSelectDeck={handleSelectDeck} onDeleteDeck={handleDeleteDeck} onDuplicateDeck={handleDuplicateDeck} />} />
+                <Route path="profile" element={<ProfileScreen />} />
+                <Route path="my-events" element={<MyEventsScreen events={events} />} />
+                <Route path="decks/:id/edit" element={<DeckEditorWrapper decks={decks} setDecks={setDecks} />} />
+                <Route path="decks/:id/present" element={<PresentationWrapper decks={decks} />} />
+            </Route>
             
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
