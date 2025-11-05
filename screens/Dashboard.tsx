@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Deck } from '../types';
 import { ArrowRightIcon, DocumentDuplicateIcon, SparklesIcon, SearchIcon, DotsVerticalIcon, TrashIcon, LoaderIcon } from '../components/Icons';
 import OnboardingTour from '../components/OnboardingTour';
 import Modal from '../components/Modal';
 import { useNavigate } from 'react-router-dom';
+import { deckService } from '../services/deckService';
 
 interface DashboardProps {
-  decks: Deck[];
+  initialDecks: Deck[];
   isLoading: boolean;
   error: string | null;
   onSelectDeck: (deckId: string, navigate: (path: string) => void) => void;
-  onDeleteDeck: (deckId: string) => void;
-  onDuplicateDeck: (deckId: string) => void;
+  onDeleteDeck: (deckId: string) => Promise<void>;
+  onDuplicateDeck: (deckId: string) => Promise<void>;
 }
 
 const DeckCardMenu: React.FC<{ onDuplicate: () => void; onDelete: () => void; }> = ({ onDuplicate, onDelete }) => {
@@ -100,38 +101,76 @@ const tourSteps = [
     { title: 'Manage Your Decks', content: 'Your created decks will appear here. You can edit, present, and share them anytime.' },
 ];
 
-const Dashboard: React.FC<DashboardProps> = ({ decks, isLoading, error, onSelectDeck, onDeleteDeck, onDuplicateDeck }) => {
+const Dashboard: React.FC<DashboardProps> = ({ initialDecks, isLoading: isLoadingInitial, error: initialError, onSelectDeck, onDeleteDeck, onDuplicateDeck }) => {
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
   const navigate = useNavigate();
 
+  const [decks, setDecks] = useState<Deck[]>(initialDecks);
+  const [isLoading, setIsLoading] = useState(isLoadingInitial);
+  const [error, setError] = useState(initialError);
+  
+  // This effect synchronizes the state if the initial props change (e.g., after a full app refresh)
   useEffect(() => {
-    if (!isLoading && decks.length === 0) {
+    setDecks(initialDecks);
+    setIsLoading(isLoadingInitial);
+    setError(initialError);
+  }, [initialDecks, isLoadingInitial, initialError]);
+
+  useEffect(() => {
+    if (!isLoading && decks.length === 0 && !searchQuery) {
         setIsTourOpen(true);
     }
-  }, [isLoading, decks]);
+  }, [isLoading, decks, searchQuery]);
+
+  // Debounce search query to avoid excessive API calls
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Effect for server-side searching
+  useEffect(() => {
+      // Don't run search on initial load if initialDecks are already provided
+      if (debouncedSearchQuery === '' && initialDecks.length > 0) {
+          setDecks(initialDecks);
+          return;
+      }
+      
+      const searchDecks = async () => {
+          setIsLoading(true);
+          setError(null);
+          try {
+              const results = await deckService.getDecks(debouncedSearchQuery);
+              setDecks(results);
+          } catch (err) {
+              setError("Could not search for decks. Please try again.");
+          } finally {
+              setIsLoading(false);
+          }
+      };
+
+      searchDecks();
+  }, [debouncedSearchQuery, initialDecks]); // Rerun when debounced query changes
 
   const handleStartDeck = () => {
     navigate('/pitch-deck');
   };
 
-  const filteredDecks = useMemo(() => 
-    decks.filter(deck => 
-        deck.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).sort((a, b) => b.lastEdited - a.lastEdited), 
-  [decks, searchQuery]);
-
   const handleDeleteConfirm = async () => {
       if(deckToDelete) {
           await onDeleteDeck(deckToDelete.id);
+          setDecks(prev => prev.filter(d => d.id !== deckToDelete!.id)); // Optimistic update
           setDeckToDelete(null);
       }
   };
   
   const handleDuplicate = async (deckId: string) => {
       await onDuplicateDeck(deckId);
+      // After duplication, we might want to refresh the list to show the new deck
+      const refreshedDecks = await deckService.getDecks();
+      setDecks(refreshedDecks);
   };
+  
+  const hasDecksInitially = initialDecks.length > 0;
   
   return (
     <div>
@@ -176,25 +215,35 @@ const Dashboard: React.FC<DashboardProps> = ({ decks, isLoading, error, onSelect
             ) : error ? (
                  <div className="col-span-full text-center py-16 bg-red-50 text-red-700 rounded-xl">{error}</div>
             ) : decks.length > 0 ? (
-                filteredDecks.length > 0 ? (
-                    filteredDecks.map(deck => (
-                        <DeckCard 
-                            key={deck.id} 
-                            deck={deck} 
-                            onSelect={() => onSelectDeck(deck.id, navigate)} 
-                            onDuplicate={() => handleDuplicate(deck.id)}
-                            onDelete={() => setDeckToDelete(deck)}
-                        />
-                    ))
-                ) : (
-                    <EmptyState onStart={handleStartDeck} isSearchResult={true} />
-                )
+                decks.map(deck => (
+                    <DeckCard 
+                        key={deck.id} 
+                        deck={deck} 
+                        onSelect={() => onSelectDeck(deck.id, navigate)} 
+                        onDuplicate={() => handleDuplicate(deck.id)}
+                        onDelete={() => setDeckToDelete(deck)}
+                    />
+                ))
             ) : (
-                <EmptyState onStart={handleStartDeck} />
+                <EmptyState onStart={handleStartDeck} isSearchResult={!!searchQuery || !hasDecksInitially} />
             )}
         </div>
     </div>
   );
 };
+
+// Custom hook for debouncing
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 export default Dashboard;

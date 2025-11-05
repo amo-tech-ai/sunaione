@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { TwitterIcon, LinkedInIcon, GitHubIcon } from './Icons';
 import { FooterLogo } from './Logo';
 
-interface FooterProps {}
+interface AppFooterProps {}
 
-const Footer: React.FC<FooterProps> = () => {
+const AppFooter: React.FC<AppFooterProps> = () => {
   return (
     <footer className="bg-amo-dark text-white">
       <div className="max-w-7xl mx-auto py-12 px-8">
@@ -50,4 +50,4 @@ const Footer: React.FC<FooterProps> = () => {
   );
 };
 
-export default Footer;
+export default AppFooter;

@@ -339,7 +339,7 @@ const AppRoutes: React.FC = () => {
                     index 
                     element={
                         <Dashboard 
-                            decks={decks} 
+                            initialDecks={decks} 
                             isLoading={isLoadingDecks}
                             error={decksError}
                             onSelectDeck={handleSelectDeck} 

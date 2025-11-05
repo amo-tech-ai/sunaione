@@ -65,7 +65,7 @@ const AICopilot: React.FC<{
         setError(null);
 
         try {
-            // Fix: Save any local unsaved changes before executing the command to prevent data loss.
+            // CRITICAL FIX: Save any local unsaved changes before executing the command to prevent data loss.
             await onBeforeCommand(); 
             await invokeEditorAgent(deckId, command);
             onCommandSuccess();

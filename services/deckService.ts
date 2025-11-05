@@ -5,15 +5,21 @@ import { supabase } from '../components/SupabaseClient';
 // All operations are scoped to the authenticated user.
 
 export const deckService = {
-    async getDecks(): Promise<Deck[]> {
+    async getDecks(searchQuery?: string): Promise<Deck[]> {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) throw new Error("User not authenticated");
 
-        const { data, error } = await supabase
+        let query = supabase
             .from('decks')
             .select('*, slides(*)')
             .eq('user_id', session.user.id)
             .order('lastEdited', { ascending: false });
+            
+        if (searchQuery) {
+            query = query.ilike('name', `%${searchQuery}%`);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error("Error fetching decks:", error);
@@ -104,13 +110,29 @@ export const deckService = {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) throw new Error("User not authenticated");
 
-        const { error } = await supabase
+        // First, delete all associated slides to prevent orphaned data
+        const { error: slidesError } = await supabase
+            .from('slides')
+            .delete()
+            .eq('deck_id', deckId)
+            .eq('user_id', session.user.id);
+
+        if (slidesError) {
+            console.error('Error deleting associated slides:', slidesError);
+            throw slidesError;
+        }
+
+        // Then, delete the deck record itself
+        const { error: deckError } = await supabase
             .from('decks')
             .delete()
             .eq('id', deckId)
             .eq('user_id', session.user.id);
             
-        if (error) throw error;
+        if (deckError) {
+            console.error('Error deleting deck:', deckError);
+            throw deckError;
+        }
     },
     
     async duplicateDeck(deckId: string): Promise<Deck> {
