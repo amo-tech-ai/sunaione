@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Deck, Slide } from '../types';
-import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon } from '../components/Icons';
+import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon, XMarkIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
-import { rewriteSlideContent, generateSlideImage } from '../services/geminiService';
+import { rewriteSlideContent, generateSlideImage, refineText } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
 
 interface DeckEditorProps {
@@ -20,12 +20,44 @@ const Toast: React.FC<{ message: string; show: boolean; }> = ({ message, show })
     );
 };
 
+const SuggestionBox: React.FC<{
+    suggestion: string;
+    onAccept: () => void;
+    onReject: () => void;
+}> = ({ suggestion, onAccept, onReject }) => {
+    return (
+        <div className="my-4 p-4 bg-orange-50 border-l-4 border-amo-orange rounded-r-lg">
+            <div className="flex justify-between items-start">
+                <div>
+                    <h4 className="font-bold text-amo-dark flex items-center gap-2">
+                        <SparklesIcon className="w-5 h-5 text-amo-orange" />
+                        AI Suggestion
+                    </h4>
+                    <p className="mt-2 text-gray-700 whitespace-pre-wrap">{suggestion}</p>
+                </div>
+                <button onClick={onReject} className="text-gray-400 hover:text-gray-600">
+                    <XMarkIcon className="w-5 h-5" />
+                </button>
+            </div>
+            <div className="mt-4 flex justify-end gap-3">
+                <button onClick={onReject} className="text-sm font-semibold text-gray-600 px-3 py-1 rounded-md hover:bg-gray-200">Reject</button>
+                <button onClick={onAccept} className="text-sm font-semibold text-white bg-green-600 px-3 py-1 rounded-md hover:bg-green-700">Accept</button>
+            </div>
+        </div>
+    );
+};
+
 
 const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     const [localDeck, setLocalDeck] = useState<Deck>(deck);
     const [activeSlide, setActiveSlide] = useState(0);
-    const [isRewriting, setIsRewriting] = useState(false);
     const [showSaveToast, setShowSaveToast] = useState(false);
+    const [refiningField, setRefiningField] = useState<'title' | 'content' | null>(null);
+    const [suggestion, setSuggestion] = useState<{
+      field: 'title' | 'content';
+      original: string;
+      refined: string;
+    } | null>(null);
     const navigate = useNavigate();
 
     // Sync local state if the incoming deck prop changes
@@ -45,6 +77,10 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     
     const style = templateStyles[localDeck.template || 'startup'];
 
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        updateSlide(activeSlide, { title: e.target.value });
+    };
+
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newContent = e.target.value.split('\n');
         updateSlide(activeSlide, { content: newContent });
@@ -56,17 +92,41 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         setLocalDeck({ ...localDeck, slides: newSlides });
     };
     
-    const handleRewrite = async () => {
-        setIsRewriting(true);
-        const originalContent = localDeck.slides[activeSlide].content.join('\n');
-        try {
-            const rewritten = await rewriteSlideContent(originalContent);
-            updateSlide(activeSlide, { content: rewritten.split('\n') });
-        } catch (error) {
-            console.error("Error rewriting content:", error);
-        } finally {
-            setIsRewriting(false);
+    const handleRefine = async (field: 'title' | 'content') => {
+        setRefiningField(field);
+        setSuggestion(null);
+
+        const textToRefine = field === 'title' ? localDeck.slides[activeSlide].title : localDeck.slides[activeSlide].content.join('\n');
+        
+        if (!textToRefine.trim()) {
+            setRefiningField(null);
+            return;
         }
+
+        try {
+            const refinedText = await refineText(textToRefine, field === 'title' ? 'Slide Title' : 'Slide Content');
+            if(refinedText.trim() && refinedText.trim().toLowerCase() !== textToRefine.trim().toLowerCase()) {
+                setSuggestion({ field, original: textToRefine, refined: refinedText });
+            }
+        } catch (error) {
+            console.error(`Error refining ${field}:`, error);
+        } finally {
+            setRefiningField(null);
+        }
+    };
+
+    const handleAcceptSuggestion = () => {
+        if (!suggestion) return;
+        if (suggestion.field === 'title') {
+            updateSlide(activeSlide, { title: suggestion.refined });
+        } else {
+            updateSlide(activeSlide, { content: suggestion.refined.split('\n') });
+        }
+        setSuggestion(null);
+    };
+
+    const handleRejectSuggestion = () => {
+        setSuggestion(null);
     };
     
     const handleGenerateImage = async () => {
@@ -161,14 +221,42 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                     <div className="flex flex-col gap-8">
                          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                             <h3 className="text-xl font-bold text-amo-dark mb-4">Edit Content</h3>
-                            <textarea
-                                value={currentSlide.content.join('\n')}
-                                onChange={handleContentChange}
-                                className="w-full h-40 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
-                            />
-                            <button onClick={handleRewrite} disabled={isRewriting} className="mt-4 w-full bg-amo-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400">
-                                {isRewriting ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
-                                {isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
+                            
+                            <div className="relative mb-4">
+                                <label htmlFor="slide-title" className="block text-sm font-medium text-gray-700 mb-1">Slide Title</label>
+                                <input
+                                    id="slide-title"
+                                    type="text"
+                                    value={currentSlide.title}
+                                    onChange={handleTitleChange}
+                                    className="w-full p-3 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
+                                />
+                                <button onClick={() => handleRefine('title')} disabled={refiningField === 'title'} className="absolute top-8 right-2 p-1 text-amo-orange hover:bg-orange-100 rounded-full disabled:text-gray-400 disabled:cursor-not-allowed">
+                                    {refiningField === 'title' ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+                                </button>
+                            </div>
+                            
+                            {suggestion && suggestion.field === 'title' && (
+                                <SuggestionBox suggestion={suggestion.refined} onAccept={handleAcceptSuggestion} onReject={handleRejectSuggestion} />
+                            )}
+
+                            <div className="relative">
+                                <label htmlFor="slide-content" className="block text-sm font-medium text-gray-700 mb-1">Slide Content</label>
+                                <textarea
+                                    id="slide-content"
+                                    value={currentSlide.content.join('\n')}
+                                    onChange={handleContentChange}
+                                    className="w-full h-40 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
+                                />
+                            </div>
+                            
+                            {suggestion && suggestion.field === 'content' && (
+                                <SuggestionBox suggestion={suggestion.refined} onAccept={handleAcceptSuggestion} onReject={handleRejectSuggestion} />
+                            )}
+
+                            <button onClick={() => handleRefine('content')} disabled={refiningField === 'content'} className="mt-4 w-full bg-amo-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400">
+                                {refiningField === 'content' ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+                                {refiningField === 'content' ? 'Refining...' : 'Refine Content with AI'}
                             </button>
                         </div>
 
