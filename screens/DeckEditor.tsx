@@ -238,10 +238,8 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         await handleSave();
         setIsGeneratingTheme(true);
         
-        // After saving, the `deck` prop will update, triggering the useEffect to update `localDeck`.
-        // We will work with the state of `localDeck` as it is when this function begins.
         const deckToProcess = { ...localDeck };
-        const originalSlides = deckToProcess.slides;
+        const originalSlides = [...deckToProcess.slides]; 
 
         const loadingSlides = originalSlides.map(s => ({ ...s, imageLoading: true }));
         setLocalDeck(prev => ({ ...prev, slides: loadingSlides }));
@@ -249,21 +247,21 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         try {
             const brief = await generateVisualTheme(deckToProcess.visualThemeDescription!);
 
-            const imagePromises = originalSlides.map((slide, index) => 
+            const imagePromises = originalSlides.map((slide) => 
                 generateSlideImage(slide.title, slide.content, brief)
-                    .then(imageUrl => ({ index, imageUrl }))
-                    .catch(error => ({ index, error })) 
             );
 
-            const results = await Promise.all(imagePromises);
+            const results = await Promise.allSettled(imagePromises);
 
-            const finalSlides = [...originalSlides];
-            results.forEach(result => {
-                if ('imageUrl' in result) {
-                    finalSlides[result.index].image = result.imageUrl;
+            const finalSlides = originalSlides.map((slide, index) => {
+                const result = results[index];
+                const newSlideData: Partial<Slide> = { imageLoading: false };
+                if (result.status === 'fulfilled') {
+                    newSlideData.image = result.value;
                 } else {
-                    console.error(`Failed to generate image for slide ${result.index}:`, result.error);
+                    console.error(`Failed to generate image for slide ${index}:`, result.reason);
                 }
+                return { ...slide, ...newSlideData };
             });
             
             const finalDeck: Deck = { 
