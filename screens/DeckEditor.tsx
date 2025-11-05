@@ -51,7 +51,8 @@ const SuggestionBox: React.FC<{
 const AICopilot: React.FC<{
     deckId: string;
     onCommandSuccess: () => void;
-}> = ({ deckId, onCommandSuccess }) => {
+    onBeforeCommand: () => Promise<void>;
+}> = ({ deckId, onCommandSuccess, onBeforeCommand }) => {
     const [command, setCommand] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -64,6 +65,8 @@ const AICopilot: React.FC<{
         setError(null);
 
         try {
+            // Fix: Save any local unsaved changes before executing the command to prevent data loss.
+            await onBeforeCommand(); 
             await invokeEditorAgent(deckId, command);
             onCommandSuccess();
             setCommand('');
@@ -436,7 +439,11 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                             </button>
                         </div>
 
-                        <AICopilot deckId={localDeck.id} onCommandSuccess={refreshDeck} />
+                        <AICopilot 
+                            deckId={localDeck.id} 
+                            onCommandSuccess={refreshDeck}
+                            onBeforeCommand={handleSave}
+                        />
                     </div>
                 </div>
             </main>
