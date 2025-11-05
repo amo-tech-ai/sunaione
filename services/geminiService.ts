@@ -1,6 +1,6 @@
 import { Slide, VisualBrief } from '../types';
 import { supabase } from '../components/SupabaseClient';
-import { GoogleGenAI, FunctionDeclaration, Type } from '@google/genai';
+import { GoogleGenAI, FunctionDeclaration, Type, Modality } from '@google/genai';
 import { deckService } from './deckService';
 
 // This service is now a thin client that invokes Supabase Edge Functions.
@@ -39,42 +39,91 @@ export const generateSlideSuggestions = async (slide: Slide): Promise<SlideSugge
 
 
 export const generateSlideImage = async (slideTitle: string, slideContent: string[], visualBrief?: VisualBrief): Promise<string> => {
-    // This function now calls the secure Supabase Edge Function 'generate-slide-image'.
-    const { data, error } = await supabase.functions.invoke('generate-slide-image', {
-        body: { slideTitle, slideContent, visualBrief },
-    });
+    // NOTE: This implementation simulates the Supabase Edge Function 'generate-slide-image'
+    // on the client-side. In a production environment, this entire logic block would reside
+    // securely in the Edge Function.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    let prompt = `Generate a compelling, abstract background visual for a startup pitch deck slide.
+    - Slide Title: "${slideTitle}"
+    - Slide Content: "${slideContent.join(', ')}"`;
 
-    if (error) {
-        console.error("Error generating slide image via Edge Function:", error);
+    if (visualBrief) {
+        prompt += `
+    
+    Adhere strictly to this visual theme brief:
+    - Style: ${visualBrief.style}
+    - Color Palette: Use these colors prominently: ${visualBrief.colorPalette.join(', ')}
+    - Keywords: ${visualBrief.keywords.join(', ')}
+    - Mood: ${visualBrief.mood}
+    
+    The image should be professional, minimalist, and suitable for a presentation background. Avoid text and complex scenes.`;
+    } else {
+        prompt += `
+        
+    The visual style should be modern, clean, and abstract, suitable for a tech startup.`;
+    }
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: {
+                parts: [{ text: prompt }],
+            },
+            config: {
+                responseModalities: [Modality.IMAGE],
+            },
+        });
+        
+        for (const part of response.candidates[0].content.parts) {
+            if (part.inlineData) {
+                const base64ImageBytes: string = part.inlineData.data;
+                return `data:image/png;base64,${base64ImageBytes}`;
+            }
+        }
+        
+        throw new Error("Image generation failed: No image data returned.");
+
+    } catch (error) {
+        console.error("Error generating slide image:", error);
         throw new Error("Image generation failed.");
     }
-    
-    if (!data || !data.imageUrl) {
-        console.error("Edge function did not return an imageUrl.", data);
-        throw new Error("Image generation failed: No image data returned.");
-    }
-    
-    // The function is expected to return a data URL (base64 string).
-    return data.imageUrl;
 };
 
 export const generateVisualTheme = async (themeDescription: string): Promise<VisualBrief> => {
-    // This function now calls the secure Supabase Edge Function 'generate-visual-theme'.
-    const { data, error } = await supabase.functions.invoke('generate-visual-theme', {
-        body: { themeDescription },
+    // NOTE: This implementation simulates the Supabase Edge Function 'generate-visual-theme'
+    // on the client-side. In a production environment, this entire logic block would reside
+    // securely in the Edge Function.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+    const systemInstruction = `You are an expert visual designer. Based on the user's description, generate a structured visual brief in JSON format. The brief must include a style description, an array of 5-7 hex color codes for the color palette, an array of relevant keywords, and a mood description.`;
+    
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Generate a visual brief for the following theme: "${themeDescription}"`,
+        config: {
+            systemInstruction,
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    style: { type: Type.STRING, description: 'A concise description of the visual style (e.g., "Minimalist & Clean", "Bold & Energetic").' },
+                    colorPalette: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'An array of 5-7 hex color codes.' },
+                    keywords: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'An array of keywords to guide image generation.' },
+                    mood: { type: Type.STRING, description: 'The overall mood or feeling (e.g., "Professional and Trustworthy", "Creative and Inspiring").' },
+                },
+                required: ['style', 'colorPalette', 'keywords', 'mood'],
+            },
+        },
     });
 
-    if (error) {
-        console.error("Error generating visual theme via Edge Function:", error);
+    try {
+        const visualBrief = JSON.parse(response.text) as VisualBrief;
+        return visualBrief;
+    } catch (error) {
+        console.error("Error parsing visual theme from AI response:", error);
         throw new Error("Could not generate a valid visual theme from the description.");
     }
-    
-    if (!data || !data.visualBrief) {
-        console.error("Edge function did not return a visualBrief.", data);
-        throw new Error("Could not generate a valid visual theme from the description.");
-    }
-    
-    return data.visualBrief as VisualBrief;
 };
 
 export const invokeEditorAgent = async (deckId: string, command: string): Promise<void> => {
