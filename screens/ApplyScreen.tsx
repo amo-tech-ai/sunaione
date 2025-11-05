@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 
 interface ApplyScreenProps {
     job: Job;
-    onSuccess: (navigate: (path: string) => void) => void;
 }
 
 const initialFormData: JobApplication = {
@@ -25,7 +24,7 @@ const initialFormData: JobApplication = {
     salaryExpectation: '',
 };
 
-const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess }) => {
+const ApplyScreen: React.FC<ApplyScreenProps> = ({ job }) => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<JobApplication>(initialFormData);
@@ -94,7 +93,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess }) => {
         // Here you would typically send the data to a server
         console.log("Submitting application:", formData);
         localStorage.removeItem(storageKey); // Clear draft on successful submission
-        onSuccess(navigate);
+        navigate(`/jobs/${job.id}/apply/success`);
     };
 
     // File handling logic

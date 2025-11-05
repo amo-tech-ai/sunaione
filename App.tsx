@@ -185,11 +185,11 @@ const PerkDetailWrapper: React.FC<{ perks: Perk[] }> = ({ perks }) => {
     return <PerkDetailScreen perkId={perkId} allPerks={perks} />;
 };
 
-const ApplyWrapper: React.FC<{ jobs: Job[]; onSuccess: (jobId: string) => void }> = ({ jobs, onSuccess }) => {
+const ApplyWrapper: React.FC<{ jobs: Job[] }> = ({ jobs }) => {
     const { jobId } = useParams<{ jobId: string }>();
     const jobToApply = jobs.find(j => j.id === jobId);
     if (!jobToApply) return <Navigate to="/jobs" />;
-    return <ApplyScreen job={jobToApply} onSuccess={() => onSuccess(jobToApply.id)} />;
+    return <ApplyScreen job={jobToApply} />;
 };
 
 const ApplySuccessWrapper: React.FC<{ jobs: Job[] }> = ({ jobs }) => {
@@ -262,10 +262,6 @@ export const App: React.FC = () => {
         );
     };
 
-    const handleJobApplySuccess = (jobId: string, navigate: (path: string) => void) => {
-        navigate(`/jobs/${jobId}/apply/success`);
-    };
-
     if (generating) {
         return <GeneratingScreen />;
     }
@@ -289,7 +285,7 @@ export const App: React.FC = () => {
             <Route path="/events/:eventId" element={<EventDetailWrapper events={events} onRegisterToggle={handleRegisterToggle} />} />
             <Route path="/perks/:perkId" element={<PerkDetailWrapper perks={perks} />} />
             <Route path="/jobs/post" element={<PostAJobScreen />} />
-            <Route path="/jobs/:jobId/apply" element={<ApplyWrapper jobs={jobs} onSuccess={handleJobApplySuccess} />} />
+            <Route path="/jobs/:jobId/apply" element={<ApplyWrapper jobs={jobs} />} />
             <Route path="/jobs/:jobId/apply/success" element={<ApplySuccessWrapper jobs={jobs} />} />
             <Route path="/blog" element={<BlogScreen articles={articles} />} />
             
