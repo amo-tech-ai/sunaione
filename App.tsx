@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useParams, Navigate, Outlet } from 'react-router-dom';
 import { DeckData, Deck, Event, Perk, Job, Article } from './types';
-import { generateDeck } from './services/geminiService';
+import { generateDeck, generateSlideImage } from './services/geminiService';
 
 import WizardSteps from './screens/WizardSteps';
 import GeneratingScreen from './screens/GeneratingScreen';
@@ -230,10 +230,25 @@ export const App: React.FC = () => {
     const handleCreateDeck = async (newDeckData: DeckData, navigate: (path: string) => void) => {
         setGenerating(true);
         const newSlides = await generateDeck(newDeckData);
+
+        // Concurrently generate an image for each slide
+        const slidesWithImagesPromises = newSlides.map(async (slide) => {
+            try {
+                const imageUrl = await generateSlideImage(slide.title, slide.content);
+                return { ...slide, image: imageUrl };
+            } catch (error) {
+                console.error("Failed to generate image for slide:", slide.title, error);
+                // Return slide without image on error
+                return slide;
+            }
+        });
+
+        const slidesWithImages = await Promise.all(slidesWithImagesPromises);
+
         const newDeck: Deck = {
             id: `deck-${Date.now()}`,
             name: newDeckData.companyName || 'Untitled Deck',
-            slides: newSlides,
+            slides: slidesWithImages,
             lastEdited: Date.now(),
             template: newDeckData.template,
         };
