@@ -32,7 +32,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
     const [isDragging, setIsDragging] = useState(false);
     const [skillInput, setSkillInput] = useState('');
 
-    const storageKey = `sunai_apply_${job.id}`;
+    const storageKey = `amo_apply_${job.id}`;
 
     useEffect(() => {
         try {
@@ -144,15 +144,15 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
     };
     
     return (
-        <div className="bg-sunai-beige font-sans">
+        <div className="bg-amo-beige font-sans">
             <PublicHeader onNavigate={setCurrentScreen} />
             <main className="pt-24 pb-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <header className="mb-8">
-                        <h1 className="text-3xl font-bold text-sunai-dark">Apply for {job.title}</h1>
+                        <h1 className="text-3xl font-bold text-amo-dark">Apply for {job.title}</h1>
                         <p className="text-gray-600">Step {step} of 3</p>
                         <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                            <div className="bg-sunai-orange h-2.5 rounded-full transition-all duration-300" style={{ width: `${(step / 3) * 100}%` }}></div>
+                            <div className="bg-amo-orange h-2.5 rounded-full transition-all duration-300" style={{ width: `${(step / 3) * 100}%` }}></div>
                         </div>
                     </header>
                     
@@ -161,7 +161,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                             <form onSubmit={handleSubmit}>
                                 {step === 1 && (
                                     <div className="space-y-6">
-                                        <h2 className="text-2xl font-bold text-sunai-dark">Personal Information</h2>
+                                        <h2 className="text-2xl font-bold text-amo-dark">Personal Information</h2>
                                         <div>
                                             <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                                             <input type="text" name="fullName" id="fullName" value={formData.fullName} onChange={handleInputChange} required className={`w-full p-3 border rounded-lg ${errors.fullName ? 'border-red-500' : 'border-gray-300'}`} />
@@ -183,9 +183,9 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                                                     <button onClick={() => setFormData(prev => ({...prev, resume: null}))} className="text-sm font-bold text-red-600 hover:underline">Remove</button>
                                                 </div>
                                             ) : (
-                                                <label onDragEnter={onDragEnter} onDragLeave={onDragLeave} onDragOver={onDragOver} onDrop={onDrop} className={`w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${isDragging ? 'border-sunai-orange bg-orange-50' : 'border-gray-300 bg-gray-50 hover:border-gray-400'}`}>
+                                                <label onDragEnter={onDragEnter} onDragLeave={onDragLeave} onDragOver={onDragOver} onDrop={onDrop} className={`w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${isDragging ? 'border-amo-orange bg-orange-50' : 'border-gray-300 bg-gray-50 hover:border-gray-400'}`}>
                                                     <UploadIcon className="w-12 h-12 mx-auto text-gray-400"/>
-                                                    <p className="mt-2 text-sm text-gray-600"><span className="font-semibold text-sunai-orange">Upload a file</span> or drag and drop</p>
+                                                    <p className="mt-2 text-sm text-gray-600"><span className="font-semibold text-amo-orange">Upload a file</span> or drag and drop</p>
                                                     <p className="text-xs text-gray-500">PDF, DOCX up to 5MB</p>
                                                     <input type="file" className="hidden" onChange={(e) => handleFileChange(e.target.files)} accept=".pdf,.doc,.docx" />
                                                 </label>
@@ -201,7 +201,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
 
                                 {step === 2 && (
                                     <div className="space-y-6">
-                                        <h2 className="text-2xl font-bold text-sunai-dark">Experience & Skills</h2>
+                                        <h2 className="text-2xl font-bold text-amo-dark">Experience & Skills</h2>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
                                                 <label htmlFor="yearsOfExperience" className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
@@ -225,9 +225,9 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Key Skills</label>
                                             <div className="flex flex-wrap items-center gap-2 p-2 border border-gray-300 rounded-lg">
                                                 {formData.skills.map(skill => (
-                                                    <span key={skill} className="flex items-center gap-1.5 bg-orange-100 text-sunai-orange text-sm font-semibold px-2 py-1 rounded">
+                                                    <span key={skill} className="flex items-center gap-1.5 bg-orange-100 text-amo-orange text-sm font-semibold px-2 py-1 rounded">
                                                         {skill}
-                                                        <button type="button" onClick={() => removeSkill(skill)}><XMarkIcon className="w-4 h-4 text-sunai-orange hover:text-orange-700"/></button>
+                                                        <button type="button" onClick={() => removeSkill(skill)}><XMarkIcon className="w-4 h-4 text-amo-orange hover:text-orange-700"/></button>
                                                     </span>
                                                 ))}
                                                 <input type="text" value={skillInput} onChange={(e) => setSkillInput(e.target.value)} onKeyDown={handleSkillKeyDown} className="flex-grow p-1 outline-none bg-transparent" placeholder="e.g., Figma, Python..." />
@@ -252,7 +252,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                                 
                                 {step === 3 && (
                                     <div className="space-y-6">
-                                        <h2 className="text-2xl font-bold text-sunai-dark">Review & Submit</h2>
+                                        <h2 className="text-2xl font-bold text-amo-dark">Review & Submit</h2>
                                         <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                                             <div><p className="text-sm text-gray-500">Full Name</p><p className="font-semibold">{formData.fullName}</p></div>
                                             <div><p className="text-sm text-gray-500">Email</p><p className="font-semibold">{formData.email}</p></div>
@@ -261,7 +261,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                                             <div><p className="text-sm text-gray-500">Skills</p><p className="font-semibold">{formData.skills.join(', ')}</p></div>
                                         </div>
                                         <div className="flex items-start">
-                                            <input id="confirmation" type="checkbox" required className="h-4 w-4 text-sunai-orange border-gray-300 rounded focus:ring-sunai-orange mt-1" />
+                                            <input id="confirmation" type="checkbox" required className="h-4 w-4 text-amo-orange border-gray-300 rounded focus:ring-amo-orange mt-1" />
                                             <label htmlFor="confirmation" className="ml-2 block text-sm text-gray-900">I confirm the information provided is accurate.</label>
                                         </div>
                                     </div>
@@ -272,11 +272,11 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                                         <ChevronLeftIcon className="w-5 h-5"/> Back
                                     </button>
                                     {step < 3 ? (
-                                        <button type="button" onClick={handleNext} disabled={isNextDisabled()} className="bg-sunai-orange text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 disabled:bg-gray-400">
+                                        <button type="button" onClick={handleNext} disabled={isNextDisabled()} className="bg-amo-orange text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 disabled:bg-gray-400">
                                             Next <ArrowRightIcon className="w-5 h-5"/>
                                         </button>
                                     ) : (
-                                        <button type="submit" className="bg-sunai-orange text-white font-bold py-2 px-6 rounded-lg">Submit Application</button>
+                                        <button type="submit" className="bg-amo-orange text-white font-bold py-2 px-6 rounded-lg">Submit Application</button>
                                     )}
                                 </div>
                             </form>
@@ -284,7 +284,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                         
                         <aside className="lg:col-span-1 space-y-6">
                             <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 sticky top-24">
-                                <h3 className="text-lg font-bold text-sunai-dark mb-4">Role Summary</h3>
+                                <h3 className="text-lg font-bold text-amo-dark mb-4">Role Summary</h3>
                                 <div className="flex items-center gap-4 mb-4">
                                     <img src={job.companyLogo} alt={`${job.companyName} logo`} className="w-12 h-12 object-contain bg-gray-100 rounded-lg p-1"/>
                                     <div>
@@ -299,7 +299,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, setCurrentScr
                                 </div>
                             </div>
                              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 sticky top-24 mt-6">
-                                <h3 className="text-lg font-bold text-sunai-dark mb-4">Application Tips</h3>
+                                <h3 className="text-lg font-bold text-amo-dark mb-4">Application Tips</h3>
                                 <ul className="space-y-3 text-sm text-gray-600 list-disc list-inside">
                                     <li>Tailor your resume to highlight relevant AI/ML project experience.</li>
                                     <li>Quantify your achievements with metrics where possible.</li>

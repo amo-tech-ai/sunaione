@@ -51,7 +51,7 @@ const PresentationScreen: React.FC<PresentationScreenProps> = ({ deck, setCurren
       <div className="p-4 bg-gray-100 flex justify-between items-center text-sm">
         <div className="font-bold">{deck.name}</div>
         <div>{currentSlideIndex + 1} / {deck.slides.length}</div>
-        <button onClick={() => setCurrentScreen(Screen.DeckEditor)} className="font-semibold hover:text-sunai-orange">Exit Presentation</button>
+        <button onClick={() => setCurrentScreen(Screen.DeckEditor)} className="font-semibold hover:text-amo-orange">Exit Presentation</button>
       </div>
     </div>
   );

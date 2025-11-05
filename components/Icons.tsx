@@ -218,3 +218,19 @@ export const XMarkIcon: React.FC<IconProps> = (props) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
 );
+
+export const PaletteIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10c.928 0 1.648-.746 1.648-1.648 0-.928-.72-1.648-1.648-1.648-.928 0-1.648.72-1.648 1.648 0 .928.72 1.648 1.648 1.648.928 0 1.648-.72 1.648-1.648 0-5.523-4.477-10-10-10z" />
+    <circle cx="12" cy="12" r="2.5" />
+    <circle cx="6.5" cy="8.5" r="1.5" />
+    <circle cx="17.5" cy="8.5" r="1.5" />
+    <circle cx="15" cy="15" r="1.5" />
+  </svg>
+);
+
+export const StarIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
+    <path fillRule="evenodd" d="M10.868 2.884c.321-.662 1.215-.662 1.536 0l1.681 3.435 3.783.549c.729.106 1.02.997.494 1.503l-2.735 2.666.645 3.768c.124.726-.635 1.285-1.288.944l-3.38-1.777-3.38 1.777c-.653.34-1.412-.218-1.288-.944l.645-3.768-2.735-2.666c-.525-.506-.234-1.397.494-1.503l3.783-.549 1.681-3.435z" clipRule="evenodd" />
+  </svg>
+);

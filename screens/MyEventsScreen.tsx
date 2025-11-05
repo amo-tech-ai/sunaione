@@ -17,7 +17,7 @@ const MyEventCard: React.FC<{ event: Event; onViewDetails: (id: string) => void;
                 event.status === 'Upcoming' ? 'bg-green-100 text-green-800' : 
                 event.status === 'Past' ? 'bg-gray-200 text-gray-700' : 'bg-blue-100 text-blue-800'
             }`}>{event.status}</span>
-            <h3 className="font-bold text-md text-sunai-dark flex-grow">{event.title}</h3>
+            <h3 className="font-bold text-md text-amo-dark flex-grow">{event.title}</h3>
             <div className="text-sm text-gray-500 space-y-2 mt-3">
                 <div className="flex items-center gap-2"><CalendarIcon className="w-4 h-4" /> <span>{event.date}</span></div>
                 <div className="flex items-center gap-2"><MapPinIcon className="w-4 h-4" /> <span>{event.location}</span></div>
@@ -41,22 +41,22 @@ const EmptyState: React.FC<{ events: Event[], setCurrentScreen: (screen: Screen)
             <p className="text-gray-500 mt-1 mb-4 text-sm">You haven’t registered for any upcoming events yet.</p>
             <button
                 onClick={() => setCurrentScreen(Screen.Events)}
-                className="bg-sunai-dark text-white font-bold py-2 px-5 rounded-lg hover:bg-black transition-all"
+                className="bg-amo-dark text-white font-bold py-2 px-5 rounded-lg hover:bg-black transition-all"
             >
                 Browse Events
             </button>
         </div>
 
         <div className="mt-12">
-            <h3 className="text-2xl font-bold text-sunai-dark mb-4">Recommended Events</h3>
+            <h3 className="text-2xl font-bold text-amo-dark mb-4">Recommended Events</h3>
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {events.filter(e => !e.registered).slice(0, 3).map(event => (
                     <div key={event.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
                         <img src={event.image} alt={event.title} className="w-20 h-20 object-cover rounded-lg" />
                         <div>
-                            <h4 className="font-bold text-sm text-sunai-dark">{event.title}</h4>
+                            <h4 className="font-bold text-sm text-amo-dark">{event.title}</h4>
                             <p className="text-xs text-gray-500 mt-1">{event.date}</p>
-                            <button onClick={() => setCurrentScreen(Screen.Events)} className="text-xs font-bold text-sunai-orange mt-2">Register</button>
+                            <button onClick={() => setCurrentScreen(Screen.Events)} className="text-xs font-bold text-amo-orange mt-2">Register</button>
                         </div>
                     </div>
                 ))}
@@ -64,9 +64,9 @@ const EmptyState: React.FC<{ events: Event[], setCurrentScreen: (screen: Screen)
         </div>
 
         <div className="mt-12">
-             <h3 className="text-2xl font-bold text-sunai-dark mb-4">Event Tips & Insights</h3>
+             <h3 className="text-2xl font-bold text-amo-dark mb-4">Event Tips & Insights</h3>
              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h4 className="font-bold text-lg text-sunai-dark">How to network effectively at startup events.</h4>
+                <h4 className="font-bold text-lg text-amo-dark">How to network effectively at startup events.</h4>
                 <p className="text-gray-600 text-sm mt-2">Prepare a concise one-liner about your startup, focus on listening more than talking, and always follow up within 24 hours. Quality connections are more valuable than quantity.</p>
              </div>
         </div>
@@ -91,12 +91,12 @@ const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events, setCurrentScree
         <div>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-sunai-dark">My Events</h1>
+                    <h1 className="text-3xl font-bold text-amo-dark">My Events</h1>
                     <p className="text-gray-600 mt-1">Manage your event registrations</p>
                 </div>
                 <button 
                     onClick={() => setCurrentScreen(Screen.Events)}
-                    className="bg-sunai-dark text-white font-semibold py-2 px-4 rounded-lg hover:bg-black transition-colors flex items-center gap-2 mt-4 md:mt-0"
+                    className="bg-amo-dark text-white font-semibold py-2 px-4 rounded-lg hover:bg-black transition-colors flex items-center gap-2 mt-4 md:mt-0"
                 >
                     Browse All Events
                 </button>
@@ -111,11 +111,11 @@ const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events, setCurrentScree
                             onClick={() => setActiveTab(tab)}
                             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                                 activeTab === tab
-                                ? 'border-sunai-orange text-sunai-orange'
+                                ? 'border-amo-orange text-amo-orange'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                         >
-                            {tab} <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === tab ? 'bg-sunai-orange/10 text-sunai-orange' : 'bg-gray-100 text-gray-600'}`}>{tabCounts[tab as keyof typeof tabCounts]}</span>
+                            {tab} <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === tab ? 'bg-amo-orange/10 text-amo-orange' : 'bg-gray-100 text-gray-600'}`}>{tabCounts[tab as keyof typeof tabCounts]}</span>
                         </button>
                     ))}
                 </nav>

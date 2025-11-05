@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Deck, Screen, Slide, TemplateID } from '../types';
-import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon } from '../components/Icons';
+import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
 import { rewriteSlideContent, generateSlideImage } from '../services/geminiService';
 
@@ -66,8 +66,8 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, setCurrentScreen
             {/* Sidebar for slide thumbnails */}
             <aside className="w-64 bg-white p-4 overflow-y-auto border-r border-gray-200">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-bold text-lg text-sunai-dark">{deck.name}</h2>
-                    <button onClick={() => setCurrentScreen(Screen.Dashboard)} className="text-sm text-gray-500 hover:text-sunai-orange">Exit</button>
+                    <h2 className="font-bold text-lg text-amo-dark">{deck.name}</h2>
+                    <button onClick={() => setCurrentScreen(Screen.Dashboard)} className="text-sm text-gray-500 hover:text-amo-orange">Exit</button>
                 </div>
                 <div className="space-y-2">
                     {deck.slides.map((slide, index) => (
@@ -92,8 +92,13 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, setCurrentScreen
                     </button>
                     <button 
                         onClick={() => setCurrentScreen(Screen.Presentation)}
-                        className="bg-sunai-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-black transition-all flex items-center gap-2">
+                        className="bg-amo-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-black transition-all flex items-center gap-2">
                         <EyeIcon className="w-5 h-5"/> Present
+                    </button>
+                     <button 
+                        onClick={() => alert('Deck saved to Google AI Studio! (Placeholder)')}
+                        className="bg-amo-orange text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
+                        <SaveIcon className="w-5 h-5"/> Save to AI Studio
                     </button>
                 </div>
 
@@ -116,30 +121,30 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, setCurrentScreen
                     {/* Editing controls */}
                     <div className="flex flex-col gap-8">
                          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                            <h3 className="text-xl font-bold text-sunai-dark mb-4">Edit Content</h3>
+                            <h3 className="text-xl font-bold text-amo-dark mb-4">Edit Content</h3>
                             <textarea
                                 value={currentSlide.content.join('\n')}
                                 onChange={handleContentChange}
-                                className="w-full h-40 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition"
+                                className="w-full h-40 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
                             />
-                            <button onClick={handleRewrite} disabled={isRewriting} className="mt-4 w-full bg-sunai-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400">
+                            <button onClick={handleRewrite} disabled={isRewriting} className="mt-4 w-full bg-amo-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400">
                                 {isRewriting ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
                                 {isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
                             </button>
                         </div>
 
                          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                            <h3 className="text-xl font-bold text-sunai-dark mb-4">Visuals</h3>
+                            <h3 className="text-xl font-bold text-amo-dark mb-4">Visuals</h3>
                             <div className="w-full aspect-video bg-gray-100 rounded-md flex items-center justify-center border border-gray-200">
                                 {currentSlide.imageLoading ? (
-                                    <LoaderIcon className="w-8 h-8 text-sunai-orange animate-spin" />
+                                    <LoaderIcon className="w-8 h-8 text-amo-orange animate-spin" />
                                 ) : currentSlide.image ? (
                                     <img src={currentSlide.image} alt={currentSlide.title} className="w-full h-full object-cover rounded-md" />
                                 ) : (
                                     <p className="text-gray-500">No image generated.</p>
                                 )}
                             </div>
-                             <button onClick={handleGenerateImage} disabled={currentSlide.imageLoading} className="mt-4 w-full bg-sunai-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700">
+                             <button onClick={handleGenerateImage} disabled={currentSlide.imageLoading} className="mt-4 w-full bg-amo-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700">
                                 {currentSlide.imageLoading ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
                                 {currentSlide.imageLoading ? 'Generating...' : currentSlide.image ? 'Regenerate Image' : 'Generate Image with AI'}
                             </button>

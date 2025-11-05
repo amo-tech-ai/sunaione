@@ -40,7 +40,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, onClose 
         <button onClick={handleSkip} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
             <XMarkIcon className="w-6 h-6" />
         </button>
-        <h3 className="text-xl font-bold text-sunai-dark mb-2">{title}</h3>
+        <h3 className="text-xl font-bold text-amo-dark mb-2">{title}</h3>
         <p className="text-gray-600 mb-6">{content}</p>
         
         <div className="flex justify-between items-center">
@@ -49,7 +49,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, onClose 
                 <button onClick={handleSkip} className="text-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors">
                     Skip
                 </button>
-                <button onClick={handleNext} className="bg-sunai-orange text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
+                <button onClick={handleNext} className="bg-amo-orange text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
                     {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
                     {currentStep < steps.length - 1 && <ArrowRightIcon className="w-4 h-4" />}
                 </button>

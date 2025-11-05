@@ -23,7 +23,7 @@ const JobCard: React.FC<{ job: Job; onStartApply: (jobId: string) => void; }> = 
             {job.isRemote && <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-800">Remote</span>}
         </div>
         <div className="flex-grow my-4">
-            <h3 className="font-bold text-lg text-sunai-dark">{job.title}</h3>
+            <h3 className="font-bold text-lg text-amo-dark">{job.title}</h3>
             <p className="text-sm text-gray-600 mt-1">{job.companyName}</p>
         </div>
         <div className="text-sm text-gray-500 space-y-2 mb-4">
@@ -38,7 +38,7 @@ const JobCard: React.FC<{ job: Job; onStartApply: (jobId: string) => void; }> = 
         </div>
         <button 
             onClick={() => onStartApply(job.id)}
-            className="w-full mt-auto bg-sunai-dark text-white font-semibold py-2 px-4 rounded-lg hover:bg-black transition-colors">
+            className="w-full mt-auto bg-amo-dark text-white font-semibold py-2 px-4 rounded-lg hover:bg-black transition-colors">
             Apply Now
         </button>
     </div>
@@ -46,10 +46,10 @@ const JobCard: React.FC<{ job: Job; onStartApply: (jobId: string) => void; }> = 
 
 const ValueCard: React.FC<{ icon: React.ElementType; title: string; description: string }> = ({ icon: Icon, title, description }) => (
     <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-center">
-        <div className="bg-orange-100 text-sunai-orange w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto">
+        <div className="bg-orange-100 text-amo-orange w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto">
             <Icon className="w-7 h-7" />
         </div>
-        <h3 className="text-xl font-bold text-sunai-dark mb-2">{title}</h3>
+        <h3 className="text-xl font-bold text-amo-dark mb-2">{title}</h3>
         <p className="text-gray-600">{description}</p>
     </div>
 );
@@ -84,7 +84,7 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen,
         <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-5xl font-bold text-sunai-dark">Job Board</h1>
+                <h1 className="text-4xl md:text-5xl font-bold text-amo-dark">Job Board</h1>
                 <p className="text-lg text-gray-600 mt-2 max-w-2xl mx-auto">Discover opportunities at AI startups and innovative companies around the world.</p>
                 <div className="relative mt-6 max-w-2xl mx-auto">
                     <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -93,7 +93,7 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen,
                         placeholder="Search jobs, roles, or skills..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition"
+                        className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
                     />
                 </div>
                 {/* Updated multi-select category filters */}
@@ -109,7 +109,7 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen,
                             <div
                                 className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${
                                     selectedCategories.includes(category)
-                                        ? 'bg-sunai-orange text-white'
+                                        ? 'bg-amo-orange text-white'
                                         : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
                                 }`}
                             >
@@ -128,7 +128,7 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen,
             </div>
              {filteredJobs.length === 0 && (
                 <div className="md:col-span-2 lg:col-span-3 text-center py-20 bg-white rounded-2xl border border-gray-200">
-                    <h3 className="text-xl font-bold text-sunai-dark">No jobs found</h3>
+                    <h3 className="text-xl font-bold text-amo-dark">No jobs found</h3>
                     <p className="text-gray-600 mt-2">Try adjusting your search or filters.</p>
                 </div>
             )}
@@ -139,7 +139,7 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen,
                     <h2 className="text-3xl font-bold">Featured Hiring Partner: Google for Startups</h2>
                     <p className="mt-2 text-gray-300">Empowering AI founders with cloud-backed tools and resources.</p>
                 </div>
-                <button className="mt-6 md:mt-0 bg-white text-sunai-dark font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-gray-200 transition-all flex-shrink-0">
+                <button className="mt-6 md:mt-0 bg-white text-amo-dark font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-gray-200 transition-all flex-shrink-0">
                     View Open Roles
                 </button>
             </div>
@@ -155,11 +155,11 @@ const JobBoardScreen: React.FC<JobBoardScreenProps> = ({ jobs, setCurrentScreen,
             
             {/* Employer CTA Section */}
             <section className="text-center bg-white p-12 rounded-2xl shadow-lg border border-gray-200">
-                 <h2 className="text-3xl font-bold text-sunai-dark">Are you hiring AI talent?</h2>
-                 <p className="text-lg text-gray-600 mt-2 mb-6">Post your openings and reach hundreds of startup founders and engineers using Sun AI.</p>
+                 <h2 className="text-3xl font-bold text-amo-dark">Are you hiring AI talent?</h2>
+                 <p className="text-lg text-gray-600 mt-2 mb-6">Post your openings and reach hundreds of startup founders and engineers using AMO AI.</p>
                  <button 
                     onClick={() => setCurrentScreen(Screen.PostAJob)}
-                    className="bg-sunai-orange text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transition-all">
+                    className="bg-amo-orange text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transition-all">
                      Add Job Posting
                  </button>
                  <p className="text-sm text-gray-500 mt-3">Free for verified startups — launch your first listing today.</p>

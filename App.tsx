@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Screen, DeckData, Deck, Event, Perk, Job, Article } from './types';
 import { generateDeck } from './services/geminiService';
@@ -109,7 +108,7 @@ const App: React.FC = () => {
 
     const renderScreen = () => {
         switch (currentScreen) {
-            case Screen.Home: return <HomePage setCurrentScreen={setCurrentScreen} events={events} perks={perks} />;
+            case Screen.Home: return <HomePage setCurrentScreen={setCurrentScreen} />;
             case Screen.Welcome: case Screen.Problem: case Screen.Market: case Screen.Traction: case Screen.Ask:
                 return <WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleDeckGenerationFinish} />;
             case Screen.Generating: return <GeneratingScreen />;
@@ -141,7 +140,7 @@ const App: React.FC = () => {
                  const appliedJob = jobs.find(j => j.id === selectedJobId);
                  if (!appliedJob) return <JobBoardScreen jobs={jobs} setCurrentScreen={setCurrentScreen} onStartApply={(id) => { setSelectedJobId(id); setCurrentScreen(Screen.Apply); }} />;
                  return <ApplySuccessScreen job={appliedJob} setCurrentScreen={setCurrentScreen} />;
-            default: return <HomePage setCurrentScreen={setCurrentScreen} events={events} perks={perks} />;
+            default: return <HomePage setCurrentScreen={setCurrentScreen} />;
         }
     };
 

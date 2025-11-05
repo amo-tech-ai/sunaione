@@ -18,7 +18,7 @@ const FeaturedArticleCard: React.FC<{ article: Article }> = ({ article }) => {
             <img src={article.imageUrl} alt={article.title} className="w-full h-96 object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-8 text-white">
-                <span className="text-sm font-bold px-3 py-1 rounded-full bg-sunai-orange/80 backdrop-blur-sm">{article.category}</span>
+                <span className="text-sm font-bold px-3 py-1 rounded-full bg-amo-orange/80 backdrop-blur-sm">{article.category}</span>
                 <h2 className="text-3xl md:text-4xl font-bold mt-4 shadow-text">{article.title}</h2>
                 <p className="mt-2 max-w-2xl text-gray-200 shadow-text">{article.excerpt}</p>
                 <div className="flex items-center gap-4 mt-6">
@@ -28,7 +28,7 @@ const FeaturedArticleCard: React.FC<{ article: Article }> = ({ article }) => {
                         <p className="text-sm text-gray-300">{article.date}</p>
                     </div>
                 </div>
-                 <button className="mt-6 bg-sunai-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
+                 <button className="mt-6 bg-amo-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
                     Read More <ArrowRightIcon className="w-4 h-4" />
                 </button>
             </div>
@@ -43,13 +43,13 @@ const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
                 <img src={article.imageUrl} alt={article.title} className="w-full h-48 object-cover aspect-video" />
                 {article.isPlaceholder && (
                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <span className="text-white font-bold text-lg bg-sunai-orange/80 px-4 py-2 rounded-full backdrop-blur-sm">Coming Soon 🌞</span>
+                        <span className="text-white font-bold text-lg bg-amo-orange/80 px-4 py-2 rounded-full backdrop-blur-sm">Coming Soon 🌞</span>
                     </div>
                 )}
             </div>
             <div className="p-6 flex flex-col flex-grow">
-                <span className="text-xs font-bold px-2 py-1 rounded-full self-start mb-3 bg-orange-100 text-sunai-orange">{article.category}</span>
-                <h3 className="font-bold text-lg text-sunai-dark flex-grow group-hover:text-sunai-orange transition-colors">{article.title}</h3>
+                <span className="text-xs font-bold px-2 py-1 rounded-full self-start mb-3 bg-orange-100 text-amo-orange">{article.category}</span>
+                <h3 className="font-bold text-lg text-amo-dark flex-grow group-hover:text-amo-orange transition-colors">{article.title}</h3>
                 {!article.isPlaceholder && <p className="text-sm text-gray-600 mt-2">{article.excerpt}</p>}
                 <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
                     <img src={article.author.avatarUrl} alt={article.author.name} className="w-8 h-8 rounded-full" />
@@ -79,7 +79,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
     });
 
     return (
-        <div className="bg-sunai-beige">
+        <div className="bg-amo-beige">
             <style>{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: translateY(10px); }
@@ -94,8 +94,8 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     {/* Header */}
                     <header className="text-center mb-12">
-                        <h1 className="text-4xl md:text-5xl font-bold text-sunai-dark">Blog</h1>
-                        <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">Insights, tutorials, and stories from the Sun AI startup community.</p>
+                        <h1 className="text-4xl md:text-5xl font-bold text-amo-dark">Blog</h1>
+                        <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">Insights, tutorials, and stories from the AMO AI startup community.</p>
                     </header>
 
                     {/* Search and Filters */}
@@ -108,7 +108,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
                                 placeholder="Search articles, topics, or founders…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:ring-2 focus:ring-sunai-orange focus:border-transparent transition"
+                                className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
                             />
                         </div>
                         <div role="tablist" aria-label="Article categories" className="mt-4 flex flex-wrap justify-center gap-2">
@@ -120,7 +120,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
                                     onClick={() => setActiveCategory(category)}
                                     className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${
                                         activeCategory === category
-                                            ? 'bg-sunai-orange text-white'
+                                            ? 'bg-amo-orange text-white'
                                             : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
                                     }`}
                                 >
@@ -139,7 +139,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
 
                     {/* Article Grid */}
                     <section aria-labelledby="latest-articles-heading" className="my-16">
-                        <h2 id="latest-articles-heading" className="text-3xl font-bold text-sunai-dark mb-8">{activeCategory === 'All' ? 'Latest from the Community' : `Showing articles in "${activeCategory}"`}</h2>
+                        <h2 id="latest-articles-heading" className="text-3xl font-bold text-amo-dark mb-8">{activeCategory === 'All' ? 'Latest from the Community' : `Showing articles in "${activeCategory}"`}</h2>
                         {filteredArticles.length > 0 ? (
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {filteredArticles.map(article => (
@@ -148,7 +148,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
                             </div>
                         ) : (
                             <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
-                                <h3 className="text-xl font-bold text-sunai-dark">No articles found</h3>
+                                <h3 className="text-xl font-bold text-amo-dark">No articles found</h3>
                                 <p className="text-gray-600 mt-2">Try adjusting your search or filters.</p>
                             </div>
                         )}
@@ -157,7 +157,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, setCurrentScreen }) =
                     {/* Pagination */}
                     <nav aria-label="Pagination" className="my-16 flex justify-center items-center gap-4 text-sm font-medium">
                         <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled>← Previous</button>
-                        <span className="px-4 py-2 rounded-lg bg-orange-100 text-sunai-orange" aria-current="page">Page 1 of 5</span>
+                        <span className="px-4 py-2 rounded-lg bg-orange-100 text-amo-orange" aria-current="page">Page 1 of 5</span>
                         <button className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100">Next →</button>
                     </nav>
                 </div>

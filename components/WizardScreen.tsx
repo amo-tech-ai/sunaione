@@ -27,11 +27,11 @@ const WizardScreen: React.FC<WizardScreenProps> = ({
   isLastStep = false,
 }) => {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 bg-sunai-beige">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 bg-amo-beige">
       <div className="w-full max-w-3xl mx-auto">
         <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
         <div className="mt-8 bg-white rounded-xl shadow-lg border border-gray-200 p-8 md:p-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-sunai-dark mb-2">{title}</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-amo-dark mb-2">{title}</h1>
           <p className="text-gray-600 mb-8">{subtitle}</p>
           
           <div className="space-y-6">
@@ -49,7 +49,7 @@ const WizardScreen: React.FC<WizardScreenProps> = ({
             <button
               onClick={onNext}
               disabled={!canGoNext}
-              className="bg-sunai-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-amo-orange text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {isLastStep ? 'Generate Deck' : 'Continue'} <ArrowRightIcon className="w-5 h-5" />
             </button>
