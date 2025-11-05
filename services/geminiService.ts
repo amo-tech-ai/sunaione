@@ -1,4 +1,4 @@
-import { Slide } from '../types';
+import { Slide, VisualBrief } from '../types';
 import { supabase } from '../components/SupabaseClient';
 
 // This service is now a thin client that invokes Supabase Edge Functions.
@@ -36,9 +36,9 @@ export const generateSlideSuggestions = async (slide: Slide): Promise<SlideSugge
 };
 
 
-export const generateSlideImage = async (slideTitle: string, slideContent: string[]): Promise<string> => {
+export const generateSlideImage = async (slideTitle: string, slideContent: string[], visualBrief?: VisualBrief): Promise<string> => {
     const { data, error } = await supabase.functions.invoke('generate-slide-image', {
-        body: { slideTitle, slideContent },
+        body: { slideTitle, slideContent, visualBrief },
     });
     
     if (error) {
@@ -48,6 +48,19 @@ export const generateSlideImage = async (slideTitle: string, slideContent: strin
     
     // The Edge Function is expected to return a URL, e.g., from Supabase Storage.
     return data.imageUrl;
+};
+
+export const generateVisualTheme = async (themeDescription: string): Promise<VisualBrief> => {
+    const { data, error } = await supabase.functions.invoke('generate-visual-theme', {
+        body: { themeDescription },
+    });
+
+    if (error) {
+        console.error(`Error generating visual theme:`, error);
+        throw error;
+    }
+
+    return data.visualBrief;
 };
 
 export const invokeEditorAgent = async (deckId: string, command: string): Promise<void> => {

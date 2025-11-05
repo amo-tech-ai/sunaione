@@ -23,12 +23,21 @@ export interface DeckData {
   template: TemplateID;
 }
 
+export interface VisualBrief {
+    style: string;
+    colorPalette: string[];
+    keywords: string[];
+    mood: string;
+}
+
 export interface Deck {
   id: string;
   name: string;
   slides: Slide[];
   lastEdited: number;
   template: TemplateID;
+  visualThemeDescription?: string;
+  visualThemeBrief?: VisualBrief;
 }
 
 export interface Event {
@@ -62,7 +71,7 @@ export interface Perk {
 }
 
 export interface Job {
-    id: string;
+    id:string;
     title: string;
     companyName: string;
     companyLogo: string;

@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Deck, Slide } from '../types';
-import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon, XMarkIcon, PaperAirplaneIcon } from '../components/Icons';
+import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon, XMarkIcon, PaperAirplaneIcon, PaletteIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
-import { generateSlideImage, generateSlideSuggestions, invokeEditorAgent } from '../services/geminiService';
+import { generateSlideImage, generateSlideSuggestions, invokeEditorAgent, generateVisualTheme } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
 import { deckService } from '../services/deckService';
 
@@ -117,6 +116,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     const [showSaveToast, setShowSaveToast] = useState(false);
     const [suggestions, setSuggestions] = useState<Record<number, { title?: string; content?: string }>>({});
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
+    const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
     const navigate = useNavigate();
 
     // Sync local state if the incoming deck prop changes
@@ -179,6 +179,10 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         updateSlide(activeSlide, { content: newContent });
     };
 
+    const handleThemeDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setLocalDeck(prev => ({ ...prev, visualThemeDescription: e.target.value }));
+    };
+
     const updateSlide = (index: number, newSlideData: Partial<Slide>) => {
         const newSlides = [...localDeck.slides];
         newSlides[index] = { ...newSlides[index], ...newSlideData, imageLoading: newSlideData.image === undefined ? newSlides[index].imageLoading : false };
@@ -216,11 +220,52 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         const slide = localDeck.slides[activeSlide];
         updateSlide(activeSlide, { imageLoading: true });
         try {
-            const imageUrl = await generateSlideImage(slide.title, slide.content);
+            const imageUrl = await generateSlideImage(slide.title, slide.content, localDeck.visualThemeBrief);
             updateSlide(activeSlide, { image: imageUrl, imageLoading: false });
         } catch (error) {
             console.error("Error generating image:", error);
             updateSlide(activeSlide, { imageLoading: false }); // Reset loading state on error
+        }
+    };
+
+    const handleGenerateThemeAndVisuals = async () => {
+        if (!localDeck.visualThemeDescription) return;
+        setIsGeneratingTheme(true);
+
+        const loadingSlides = localDeck.slides.map(s => ({ ...s, imageLoading: true }));
+        setLocalDeck(prev => ({ ...prev, slides: loadingSlides }));
+
+        try {
+            const brief = await generateVisualTheme(localDeck.visualThemeDescription);
+            setLocalDeck(prev => ({ ...prev, visualThemeBrief: brief }));
+
+            const imagePromises = localDeck.slides.map((slide, index) => 
+                generateSlideImage(slide.title, slide.content, brief)
+                    .then(imageUrl => ({ index, imageUrl }))
+                    .catch(error => ({ index, error })) 
+            );
+
+            const results = await Promise.all(imagePromises);
+
+            setLocalDeck(prev => {
+                const newSlides = [...prev.slides];
+                results.forEach(result => {
+                    if ('imageUrl' in result) {
+                        newSlides[result.index].image = result.imageUrl;
+                    } else {
+                        console.error(`Failed to generate image for slide ${result.index}:`, result.error);
+                    }
+                    newSlides[result.index].imageLoading = false;
+                });
+                return { ...prev, slides: newSlides };
+            });
+
+        } catch (error) {
+            console.error("Error generating theme and visuals:", error);
+            const resetSlides = localDeck.slides.map(s => ({ ...s, imageLoading: false }));
+            setLocalDeck(prev => ({ ...prev, slides: resetSlides }));
+        } finally {
+            setIsGeneratingTheme(false);
         }
     };
 
@@ -266,7 +311,6 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                         >
                             <p className={`text-sm font-semibold ${style.header}`}>{index + 1}. {slide.title}</p>
                              {suggestions[index] && (Object.keys(suggestions[index]).length > 0) && (
-                                // Fix: The `title` prop is not a valid SVG attribute in React. Wrapped the `SparklesIcon` in a `div` with a `title` attribute to provide the tooltip and resolve the TypeScript error.
                                 <div title="AI suggestions available" className="absolute top-2 right-2">
                                     <SparklesIcon className="w-4 h-4 text-amo-orange" />
                                 </div>
@@ -304,17 +348,29 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                     {/* Slide preview */}
                     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-8 flex flex-col justify-center items-center">
-                        <div className="aspect-video w-full bg-gray-50 rounded-lg flex flex-col justify-center p-4 sm:p-8">
-                            <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-6 ${style.header}`}>{currentSlide.title}</h1>
-                            <ul className="space-y-3">
-                                {currentSlide.content.map((point, i) => (
-                                    <li key={i} className={`flex items-start gap-3 text-base sm:text-lg ${style.body}`}>
-                                        <span className={`mt-1.5 flex-shrink-0 w-2.5 h-2.5 rounded-full ${style.bullet}`}></span>
-                                        {point}
-                                    </li>
-                                ))}
-                            </ul>
+                         <div className="w-full aspect-video bg-gray-100 rounded-md flex items-center justify-center border border-gray-200 mb-4">
+                            {currentSlide.imageLoading ? (
+                                <LoaderIcon className="w-8 h-8 text-amo-orange animate-spin" />
+                            ) : currentSlide.image ? (
+                                <img src={currentSlide.image} alt={currentSlide.title} className="w-full h-full object-cover rounded-md" />
+                            ) : (
+                                <div className="aspect-video w-full bg-gray-50 rounded-lg flex flex-col justify-center p-4 sm:p-8">
+                                    <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-6 ${style.header}`}>{currentSlide.title}</h1>
+                                    <ul className="space-y-3">
+                                        {currentSlide.content.map((point, i) => (
+                                            <li key={i} className={`flex items-start gap-3 text-base sm:text-lg ${style.body}`}>
+                                                <span className={`mt-1.5 flex-shrink-0 w-2.5 h-2.5 rounded-full ${style.bullet}`}></span>
+                                                {point}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
+                        <button onClick={handleGenerateImage} disabled={currentSlide.imageLoading || isGeneratingTheme} className="w-full bg-amo-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700">
+                            {currentSlide.imageLoading ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+                            {currentSlide.imageLoading ? 'Generating...' : currentSlide.image ? 'Regenerate Image' : 'Generate Image with AI'}
+                        </button>
                     </div>
                     
                     {/* Editing controls */}
@@ -362,19 +418,21 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                         </div>
 
                          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                            <h3 className="text-xl font-bold text-amo-dark mb-4">Visuals</h3>
-                            <div className="w-full aspect-video bg-gray-100 rounded-md flex items-center justify-center border border-gray-200">
-                                {currentSlide.imageLoading ? (
-                                    <LoaderIcon className="w-8 h-8 text-amo-orange animate-spin" />
-                                ) : currentSlide.image ? (
-                                    <img src={currentSlide.image} alt={currentSlide.title} className="w-full h-full object-cover rounded-md" />
-                                ) : (
-                                    <p className="text-gray-500">No image generated.</p>
-                                )}
-                            </div>
-                             <button onClick={handleGenerateImage} disabled={currentSlide.imageLoading} className="mt-4 w-full bg-amo-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700">
-                                {currentSlide.imageLoading ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
-                                {currentSlide.imageLoading ? 'Generating...' : currentSlide.image ? 'Regenerate Image' : 'Generate Image with AI'}
+                            <h3 className="text-xl font-bold text-amo-dark mb-4 flex items-center gap-2">
+                                <PaletteIcon className="w-6 h-6 text-amo-orange" />
+                                Visual Theme
+                            </h3>
+                            <label htmlFor="theme-description" className="block text-sm font-medium text-gray-700 mb-1">Describe the visual style for your deck</label>
+                            <textarea
+                                id="theme-description"
+                                value={localDeck.visualThemeDescription || ''}
+                                onChange={handleThemeDescriptionChange}
+                                className="w-full h-24 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
+                                placeholder="e.g., A clean, minimalist style for a healthcare startup, using a light blue accent color."
+                            />
+                             <button onClick={handleGenerateThemeAndVisuals} disabled={isGeneratingTheme || !localDeck.visualThemeDescription} className="mt-4 w-full bg-amo-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700">
+                                {isGeneratingTheme ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+                                {isGeneratingTheme ? 'Generating Theme & Visuals...' : 'Generate Theme & All Visuals'}
                             </button>
                         </div>
 

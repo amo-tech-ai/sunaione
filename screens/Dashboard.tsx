@@ -18,7 +18,7 @@ const DeckCardMenu: React.FC<{ onDuplicate: () => void; onDelete: () => void; }>
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Close menu when clicking outside
-    React.useEffect(() => {
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
