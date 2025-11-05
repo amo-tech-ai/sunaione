@@ -3,11 +3,10 @@ import { Article } from '../types';
 import { PublicHeader } from './HomePage';
 import Footer from '../components/Footer';
 import { SearchIcon, ArrowRightIcon } from '../components/Icons';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface BlogScreenProps {
     articles: Article[];
-    navigate: NavigateFunction;
 }
 
 const categories = ['All', 'AI News', 'Founder Stories', 'Tutorials', 'Events', 'Startup Lessons'];
@@ -64,7 +63,8 @@ const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
 };
 
 
-const BlogScreen: React.FC<BlogScreenProps> = ({ articles, navigate }) => {
+const BlogScreen: React.FC<BlogScreenProps> = ({ articles }) => {
+    const navigate = useNavigate();
     const [activeCategory, setActiveCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -89,7 +89,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, navigate }) => {
                     animation: fade-in 0.5s ease-out forwards;
                 }
             `}</style>
-            <PublicHeader navigate={navigate} />
+            <PublicHeader />
             <main className="pt-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     {/* Header */}
@@ -162,7 +162,7 @@ const BlogScreen: React.FC<BlogScreenProps> = ({ articles, navigate }) => {
                     </nav>
                 </div>
             </main>
-            <Footer navigate={navigate} />
+            <Footer />
         </div>
     );
 };

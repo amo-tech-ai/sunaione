@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { Deck } from '../types';
 import { ArrowRightIcon, DocumentDuplicateIcon, SparklesIcon } from '../components/Icons';
 import OnboardingTour from '../components/OnboardingTour';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardProps {
   decks: Deck[];
-  navigate: NavigateFunction;
-  onSelectDeck: (deckId: string) => void;
+  onSelectDeck: (deckId: string, navigate: (path: string) => void) => void;
 }
 
 const DeckCard: React.FC<{ deck: Deck; onSelect: () => void; }> = ({ deck, onSelect }) => {
@@ -50,8 +49,9 @@ const tourSteps = [
     { title: 'Manage Your Decks', content: 'Your created decks will appear here. You can edit, present, and share them anytime.' },
 ];
 
-const Dashboard: React.FC<DashboardProps> = ({ decks, navigate, onSelectDeck }) => {
+const Dashboard: React.FC<DashboardProps> = ({ decks, onSelectDeck }) => {
   const [isTourOpen, setIsTourOpen] = useState(decks.length === 0);
+  const navigate = useNavigate();
 
   const handleStartDeck = () => {
     navigate('/create-deck');
@@ -77,7 +77,7 @@ const Dashboard: React.FC<DashboardProps> = ({ decks, navigate, onSelectDeck }) 
         {decks.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {decks.map(deck => (
-                    <DeckCard key={deck.id} deck={deck} onSelect={() => onSelectDeck(deck.id)} />
+                    <DeckCard key={deck.id} deck={deck} onSelect={() => onSelectDeck(deck.id, navigate)} />
                 ))}
             </div>
         ) : (

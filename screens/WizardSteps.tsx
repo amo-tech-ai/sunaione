@@ -3,20 +3,20 @@ import WizardScreen from '../components/WizardScreen';
 import { DeckData, TemplateID } from '../types';
 import { refineText } from '../services/geminiService';
 import { SparklesIcon, LoaderIcon } from '../components/Icons';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface WizardStepsProps {
   deckData: DeckData;
   setDeckData: React.Dispatch<React.SetStateAction<DeckData>>;
-  onFinish: () => void;
-  navigate: NavigateFunction;
+  onFinish: (deckData: DeckData, navigate: (path: string) => void) => void;
 }
 
 type WizardStep = 'Welcome' | 'Problem' | 'Market' | 'Traction' | 'Ask';
 
-const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFinish, navigate }) => {
+const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFinish }) => {
   const [step, setStep] = useState<WizardStep>('Welcome');
   const [refiningField, setRefiningField] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const totalSteps = 5;
 
@@ -46,7 +46,7 @@ const WizardSteps: React.FC<WizardStepsProps> = ({ deckData, setDeckData, onFini
       case 'Problem': setStep('Market'); break;
       case 'Market': setStep('Traction'); break;
       case 'Traction': setStep('Ask'); break;
-      case 'Ask': onFinish(); break;
+      case 'Ask': onFinish(deckData, navigate); break;
     }
   };
 

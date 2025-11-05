@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Event } from '../types';
 import { CalendarIcon, MapPinIcon, UsersIcon, ArrowRightIcon } from '../components/Icons';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface MyEventsScreenProps {
     events: Event[];
-    navigate: NavigateFunction;
 }
 
 const MyEventCard: React.FC<{ event: Event; onViewDetails: (id: string) => void; }> = ({ event, onViewDetails }) => (
@@ -32,7 +31,7 @@ const MyEventCard: React.FC<{ event: Event; onViewDetails: (id: string) => void;
 );
 
 
-const EmptyState: React.FC<{ events: Event[], navigate: NavigateFunction }> = ({ events, navigate }) => (
+const EmptyState: React.FC<{ events: Event[]; navigate: (path: string) => void }> = ({ events, navigate }) => (
     <div>
         <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
             <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-2" />
@@ -73,8 +72,9 @@ const EmptyState: React.FC<{ events: Event[], navigate: NavigateFunction }> = ({
 );
 
 
-const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events, navigate }) => {
+const MyEventsScreen: React.FC<MyEventsScreenProps> = ({ events }) => {
     const [activeTab, setActiveTab] = useState('Upcoming');
+    const navigate = useNavigate();
     
     const registeredEvents = events.filter(e => e.registered);
     const upcomingEvents = registeredEvents.filter(e => e.status === 'Upcoming');

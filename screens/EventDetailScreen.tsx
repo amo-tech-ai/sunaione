@@ -1,16 +1,16 @@
 import React from 'react';
 import { Event } from '../types';
 import { ChevronLeftIcon, CalendarIcon, MapPinIcon, UsersIcon } from '../components/Icons';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface EventDetailScreenProps {
     eventId: string;
-    navigate: NavigateFunction;
     events: Event[];
     onRegisterToggle: (eventId: string) => void;
 }
 
-const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ eventId, navigate, events, onRegisterToggle }) => {
+const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ eventId, events, onRegisterToggle }) => {
+    const navigate = useNavigate();
     const event = events.find(e => e.id === eventId);
 
     if (!event) {

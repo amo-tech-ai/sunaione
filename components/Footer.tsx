@@ -2,9 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { TwitterIcon, LinkedInIcon, GitHubIcon } from './Icons';
 
-interface FooterProps {
-  navigate: (path: string) => void;
-}
+interface FooterProps {}
 
 const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
     <div className={`flex items-center gap-3 font-poppins font-bold text-xl ${className}`}>
@@ -18,7 +16,7 @@ const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 
-const Footer: React.FC<FooterProps> = ({ navigate }) => {
+const Footer: React.FC<FooterProps> = () => {
   return (
     <footer className="bg-amo-dark text-white">
       <div className="max-w-7xl mx-auto py-12 px-8">

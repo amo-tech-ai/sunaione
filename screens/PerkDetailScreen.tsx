@@ -1,12 +1,11 @@
 import React from 'react';
 import { Perk } from '../types';
 import { ChevronLeftIcon, LightBulbIcon, PuzzlePieceIcon, CogIcon, CheckCircleIcon } from '../components/Icons';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface PerkDetailScreenProps {
     perkId: string;
     allPerks: Perk[];
-    navigate: NavigateFunction;
 }
 
 // Reusable card component for this page
@@ -42,7 +41,8 @@ const StepCard: React.FC<{ step: number; title: string; description: string }> =
 );
 
 
-const PerkDetailScreen: React.FC<PerkDetailScreenProps> = ({ perkId, allPerks, navigate }) => {
+const PerkDetailScreen: React.FC<PerkDetailScreenProps> = ({ perkId, allPerks }) => {
+    const navigate = useNavigate();
     const perk = allPerks.find(p => p.id === perkId);
 
     if (!perk) {

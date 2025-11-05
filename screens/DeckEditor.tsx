@@ -3,18 +3,18 @@ import { Deck, Slide } from '../types';
 import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
 import { rewriteSlideContent, generateSlideImage } from '../services/geminiService';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface DeckEditorProps {
     deck: Deck;
     setDeck: (deck: Deck | null) => void;
-    navigate: NavigateFunction;
 }
 
-const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, navigate }) => {
+const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     const [activeSlide, setActiveSlide] = useState(0);
     const [editingContent, setEditingContent] = useState<string | null>(null);
     const [isRewriting, setIsRewriting] = useState(false);
+    const navigate = useNavigate();
 
     if (!deck) {
         return <div className="p-8">Error: No deck loaded.</div>;
@@ -84,15 +84,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck, navigate }) => {
 
             {/* Main slide editor */}
             <main className="flex-1 p-8 overflow-y-auto">
-                <div className="flex justify-end gap-4 mb-4">
+                <div className="flex justify-end items-center gap-4 mb-4">
                     <button 
                         onClick={() => alert('Share functionality is coming soon!')}
                         className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
                         <UserCircleIcon className="w-5 h-5"/> Share
                     </button>
                     <button 
-                        onClick={() => navigate(`/deck/${deck.id}/present`)}
-                        className="bg-amo-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-black transition-all flex items-center gap-2">
+                        onClick={() => navigate(`/dashboard/decks/${deck.id}/present`)}
+                        className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
                         <EyeIcon className="w-5 h-5"/> Present
                     </button>
                      <button 

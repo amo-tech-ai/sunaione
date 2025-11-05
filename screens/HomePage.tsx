@@ -1,11 +1,9 @@
 import React from 'react';
 import { LightBulbIcon, CogIcon, PaletteIcon, StarIcon } from '../components/Icons';
 import Footer from '../components/Footer';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-interface HomePageProps {
-  navigate: NavigateFunction;
-}
+interface HomePageProps {}
 
 const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
     <div className={`flex items-center gap-3 font-poppins font-bold text-2xl text-amo-teal-dark ${className}`}>
@@ -18,19 +16,22 @@ const AmoAILogo: React.FC<{ className?: string }> = ({ className }) => (
     </div>
 );
 
-export const PublicHeader: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
-    <header className="absolute top-0 left-0 right-0 z-10 py-4 px-8 flex justify-between items-center">
-        <button onClick={() => navigate('/')} aria-label="Home">
-            <AmoAILogo />
-        </button>
-        <button
-            onClick={() => navigate('/create-deck')}
-            className="font-semibold text-amo-dark bg-white border border-gray-300 py-2 px-5 rounded-lg hover:bg-gray-100 transition-colors"
-        >
-            Try it Free Now
-        </button>
-    </header>
-);
+export const PublicHeader: React.FC = () => {
+    const navigate = useNavigate();
+    return (
+        <header className="absolute top-0 left-0 right-0 z-10 py-4 px-8 flex justify-between items-center">
+            <button onClick={() => navigate('/')} aria-label="Home">
+                <AmoAILogo />
+            </button>
+            <button
+                onClick={() => navigate('/create-deck')}
+                className="font-semibold text-amo-dark bg-white border border-gray-300 py-2 px-5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+                Try it Free Now
+            </button>
+        </header>
+    );
+};
 
 const HowItWorksCard: React.FC<{ icon: React.ElementType, title: string, children: React.ReactNode }> = ({ icon: Icon, title, children }) => (
     <div className="bg-white/60 backdrop-blur-sm p-8 rounded-2xl shadow-sm border border-gray-200/50">
@@ -57,12 +58,13 @@ const TestimonialCard: React.FC<{ quote: string, name: string, role: string }> =
     </div>
 );
 
-const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
+const HomePage: React.FC<HomePageProps> = () => {
+  const navigate = useNavigate();
   const handleCTA = () => navigate('/create-deck');
   
   return (
     <div className="bg-amo-beige font-sans">
-      <PublicHeader navigate={navigate} />
+      <PublicHeader />
       
       {/* Hero Section */}
       <main className="relative min-h-screen flex flex-col items-center justify-center p-4 pt-24 text-center overflow-hidden">
@@ -201,7 +203,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
          </div>
       </section>
 
-      <Footer navigate={navigate} />
+      <Footer />
     </div>
   );
 };

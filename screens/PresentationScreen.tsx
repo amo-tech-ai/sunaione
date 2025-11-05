@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Deck } from '../types';
 import { templateStyles } from '../styles/templates';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface PresentationScreenProps {
   deck: Deck;
-  navigate: NavigateFunction;
 }
 
-const PresentationScreen: React.FC<PresentationScreenProps> = ({ deck, navigate }) => {
+const PresentationScreen: React.FC<PresentationScreenProps> = ({ deck }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -18,7 +18,7 @@ const PresentationScreen: React.FC<PresentationScreenProps> = ({ deck, navigate 
       } else if (e.key === 'ArrowLeft') {
         setCurrentSlideIndex(prev => Math.max(prev - 1, 0));
       } else if (e.key === 'Escape') {
-        navigate(`/deck/${deck.id}/edit`);
+        navigate(`/dashboard/decks/${deck.id}/edit`);
       }
     };
 
@@ -51,7 +51,7 @@ const PresentationScreen: React.FC<PresentationScreenProps> = ({ deck, navigate 
       <div className="p-4 bg-gray-100 flex justify-between items-center text-sm">
         <div className="font-bold">{deck.name}</div>
         <div>{currentSlideIndex + 1} / {deck.slides.length}</div>
-        <button onClick={() => navigate(`/deck/${deck.id}/edit`)} className="font-semibold hover:text-amo-orange">Exit Presentation</button>
+        <button onClick={() => navigate(`/dashboard/decks/${deck.id}/edit`)} className="font-semibold hover:text-amo-orange">Exit Presentation</button>
       </div>
     </div>
   );

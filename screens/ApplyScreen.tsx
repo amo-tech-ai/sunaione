@@ -6,12 +6,11 @@ import {
     ChevronLeftIcon, ArrowRightIcon, DocumentTextIcon, XMarkIcon, 
     UploadIcon, CheckCircleIcon, BriefcaseIcon, MapPinIcon, CurrencyDollarIcon 
 } from '../components/Icons';
-import { NavigateFunction } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface ApplyScreenProps {
     job: Job;
-    onSuccess: () => void;
-    navigate: NavigateFunction;
+    onSuccess: (navigate: (path: string) => void) => void;
 }
 
 const initialFormData: JobApplication = {
@@ -26,7 +25,8 @@ const initialFormData: JobApplication = {
     salaryExpectation: '',
 };
 
-const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, navigate }) => {
+const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess }) => {
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<JobApplication>(initialFormData);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -94,7 +94,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, navigate }) =
         // Here you would typically send the data to a server
         console.log("Submitting application:", formData);
         localStorage.removeItem(storageKey); // Clear draft on successful submission
-        onSuccess();
+        onSuccess(navigate);
     };
 
     // File handling logic
@@ -146,7 +146,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, navigate }) =
     
     return (
         <div className="bg-amo-beige font-sans">
-            <PublicHeader navigate={navigate} />
+            <PublicHeader />
             <main className="pt-24 pb-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <header className="mb-8">
@@ -311,7 +311,7 @@ const ApplyScreen: React.FC<ApplyScreenProps> = ({ job, onSuccess, navigate }) =
                     </div>
                 </div>
             </main>
-            <Footer navigate={navigate} />
+            <Footer />
         </div>
     );
 };
