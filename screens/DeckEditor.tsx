@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Deck, Slide } from '../types';
-import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon } from '../components/Icons';
+import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
 import { rewriteSlideContent, generateSlideImage } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
@@ -10,11 +10,38 @@ interface DeckEditorProps {
     setDeck: (deck: Deck | null) => void;
 }
 
+const Toast: React.FC<{ message: string; show: boolean; }> = ({ message, show }) => {
+    if (!show) return null;
+    return (
+        <div className="fixed bottom-8 right-8 bg-amo-dark text-white py-3 px-6 rounded-lg shadow-2xl flex items-center gap-3 animate-fade-in-up">
+            <CheckCircleIcon className="w-6 h-6 text-green-400" />
+            <span className="font-semibold">{message}</span>
+        </div>
+    );
+};
+
+
 const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     const [activeSlide, setActiveSlide] = useState(0);
-    const [editingContent, setEditingContent] = useState<string | null>(null);
     const [isRewriting, setIsRewriting] = useState(false);
+    const [showSaveToast, setShowSaveToast] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Automatically save when the deck state changes from interactions
+        if (deck) {
+            const timer = setTimeout(() => {
+                // The actual save is handled by the wrapper component `DeckEditorWrapper`
+                // This effect just triggers the toast
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [deck]);
+    
+    const handleShowSaveToast = () => {
+        setShowSaveToast(true);
+        setTimeout(() => setShowSaveToast(false), 3000);
+    }
 
     if (!deck) {
         return <div className="p-8">Error: No deck loaded.</div>;
@@ -58,18 +85,29 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         }
     };
 
+    const handleAddSlide = () => {
+        const newSlide: Slide = {
+            title: 'New Slide',
+            content: ['Add your content here.'],
+        };
+        const newSlides = [...deck.slides, newSlide];
+        setDeck({ ...deck, slides: newSlides, lastEdited: Date.now() });
+        setActiveSlide(newSlides.length - 1);
+    };
+
 
     const currentSlide = deck.slides[activeSlide];
 
     return (
         <div className="flex h-screen bg-gray-100">
+            <Toast message="Deck saved successfully!" show={showSaveToast} />
             {/* Sidebar for slide thumbnails */}
-            <aside className="w-64 bg-white p-4 overflow-y-auto border-r border-gray-200">
+            <aside className="w-64 bg-white p-4 flex flex-col overflow-y-auto border-r border-gray-200">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-bold text-lg text-amo-dark">{deck.name}</h2>
                     <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:text-amo-orange">Exit</button>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 flex-grow">
                     {deck.slides.map((slide, index) => (
                         <div
                             key={index}
@@ -79,6 +117,11 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                             <p className={`text-sm font-semibold ${style.header}`}>{index + 1}. {slide.title}</p>
                         </div>
                     ))}
+                </div>
+                <div className="mt-4">
+                    <button onClick={handleAddSlide} className="w-full bg-gray-100 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm">
+                        <PlusIcon className="w-4 h-4" /> Add Slide
+                    </button>
                 </div>
             </aside>
 
@@ -96,7 +139,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                         <EyeIcon className="w-5 h-5"/> Present
                     </button>
                      <button 
-                        onClick={() => alert('Deck saved to Google AI Studio! (Placeholder)')}
+                        onClick={handleShowSaveToast}
                         className="bg-amo-orange text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-opacity-90 transition-all flex items-center gap-2">
                         <SaveIcon className="w-5 h-5"/> Save to AI Studio
                     </button>

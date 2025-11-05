@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, useParams, Navigate, Outlet } from 'react-router-dom';
-import { DeckData, Deck, Event, Perk, Job, Article } from './types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, useParams, Navigate } from 'react-router-dom';
+import { DeckData, Deck, Event, Perk, Job, Article, Slide } from './types';
 import { generateDeck, generateSlideImage } from './services/geminiService';
+import { deckService } from './services/deckService';
 
 import WizardSteps from './screens/WizardSteps';
 import GeneratingScreen from './screens/GeneratingScreen';
@@ -23,20 +24,7 @@ import ApplyScreen from './screens/ApplyScreen';
 import ApplySuccessScreen from './screens/ApplySuccessScreen';
 
 // --- Mock Data ---
-const initialDecks: Deck[] = [
-  {
-    id: 'deck-1',
-    name: 'Innovate AI Pitch',
-    slides: [
-      { title: 'Title', content: ['Innovate AI'] },
-      { title: 'Problem', content: ['The market for AI-driven pitch decks is nascent but growing.'] },
-      { title: 'Solution', content: ['AMO AI provides an intuitive, AI-powered platform for creating them.'] },
-    ],
-    lastEdited: Date.now() - 2 * 24 * 60 * 60 * 1000,
-    template: 'startup',
-  },
-];
-
+// Initial decks are now loaded from the service, which might be seeded from localStorage.
 const initialEvents: Event[] = [
   {
     id: 'event-1',
@@ -156,11 +144,13 @@ const DeckEditorWrapper: React.FC<{ decks: Deck[]; setDecks: React.Dispatch<Reac
     const { id } = useParams<{ id: string }>();
     const activeDeck = decks.find(d => d.id === id);
     
-    const setActiveDeck = (updatedDeck: Deck | null) => {
+    const setActiveDeck = useCallback((updatedDeck: Deck | null) => {
         if (updatedDeck) {
-            setDecks(decks.map(d => d.id === updatedDeck.id ? updatedDeck : d));
+            deckService.saveDeck(updatedDeck).then(() => {
+                setDecks(decks.map(d => d.id === updatedDeck.id ? updatedDeck : d));
+            });
         }
-    };
+    }, [decks, setDecks]);
 
     if (!activeDeck) return <Navigate to="/dashboard" />;
     return <DeckEditor deck={activeDeck} setDeck={setActiveDeck} />;
@@ -200,10 +190,7 @@ const ApplySuccessWrapper: React.FC<{ jobs: Job[] }> = ({ jobs }) => {
 };
 
 export const App: React.FC = () => {
-    const [decks, setDecks] = useState<Deck[]>(() => {
-        const savedDecks = localStorage.getItem('amo_decks');
-        return savedDecks ? JSON.parse(savedDecks) : initialDecks;
-    });
+    const [decks, setDecks] = useState<Deck[]>([]);
     const [generating, setGenerating] = useState(false);
     const [deckData, setDeckData] = useState<DeckData>({
         companyName: '',
@@ -224,21 +211,20 @@ export const App: React.FC = () => {
     const [articles] = useState<Article[]>(initialArticles);
 
     useEffect(() => {
-        localStorage.setItem('amo_decks', JSON.stringify(decks));
-    }, [decks]);
+        // Load initial decks from the service on mount
+        deckService.getDecks().then(setDecks);
+    }, []);
     
     const handleCreateDeck = async (newDeckData: DeckData, navigate: (path: string) => void) => {
         setGenerating(true);
-        const newSlides = await generateDeck(newDeckData);
+        const newSlides: Slide[] = await generateDeck(newDeckData);
 
-        // Concurrently generate an image for each slide
         const slidesWithImagesPromises = newSlides.map(async (slide) => {
             try {
                 const imageUrl = await generateSlideImage(slide.title, slide.content);
                 return { ...slide, image: imageUrl };
             } catch (error) {
                 console.error("Failed to generate image for slide:", slide.title, error);
-                // Return slide without image on error
                 return slide;
             }
         });
@@ -252,6 +238,8 @@ export const App: React.FC = () => {
             lastEdited: Date.now(),
             template: newDeckData.template,
         };
+        
+        await deckService.createDeck(newDeck);
         setDecks(prev => [...prev, newDeck]);
         setGenerating(false);
         navigate(`/dashboard/decks/${newDeck.id}/edit`);
@@ -259,6 +247,16 @@ export const App: React.FC = () => {
 
     const handleSelectDeck = (deckId: string, navigate: (path: string) => void) => {
         navigate(`/dashboard/decks/${deckId}/edit`);
+    };
+
+    const handleDeleteDeck = async (deckId: string) => {
+        await deckService.deleteDeck(deckId);
+        setDecks(prev => prev.filter(d => d.id !== deckId));
+    };
+
+    const handleDuplicateDeck = async (deckId: string) => {
+        const duplicatedDeck = await deckService.duplicateDeck(deckId);
+        setDecks(prev => [...prev, duplicatedDeck]);
     };
     
     const handleRegisterToggle = (eventId: string) => {
@@ -287,7 +285,7 @@ export const App: React.FC = () => {
             <Route path="/create-deck" element={<WizardSteps deckData={deckData} setDeckData={setDeckData} onFinish={handleCreateDeck} />} />
             
             <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<Dashboard decks={decks} onSelectDeck={handleSelectDeck} />} />
+                <Route index element={<Dashboard decks={decks} onSelectDeck={handleSelectDeck} onDeleteDeck={handleDeleteDeck} onDuplicateDeck={handleDuplicateDeck} />} />
                 <Route path="profile" element={<ProfileScreen />} />
                 <Route path="my-events" element={<MyEventsScreen events={events} />} />
                 <Route path="perks" element={<PerksScreen perks={perks} />} />
