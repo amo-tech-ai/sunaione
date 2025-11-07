@@ -1,15 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Deck, Slide } from '../types';
-import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon, XMarkIcon, PaperAirplaneIcon, PaletteIcon } from '../components/Icons';
+import { Deck, Slide, AnalysisResult, ResearchResult } from '../types';
+import { SparklesIcon, EyeIcon, UserCircleIcon, LoaderIcon, SaveIcon, PlusIcon, CheckCircleIcon, XMarkIcon, PaperAirplaneIcon, PaletteIcon, DocumentTextIcon, AcademicCapIcon, ClipboardDocumentListIcon, LightBulbIcon, GlobeAltIcon, DownloadIcon } from '../components/Icons';
 import { templateStyles } from '../styles/templates';
-import { generateSlideImage, generateSlideSuggestions, invokeEditorAgent, generateVisualTheme } from '../services/geminiService';
+import { generateSlideImage, generateSlideSuggestions, invokeEditorAgent, generateVisualTheme, analyzeDeck, invokeResearchAgent, refineSlideImage, generateWorkflowDiagram } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
 import { deckService } from '../services/deckService';
+import AICopilot from '../components/AICopilot';
+import { AnalysisPanel } from '../components/AnalysisPanel';
+import { ResearchResultPanel } from '../components/ResearchResultPanel';
+
+// Add mermaid to the window object for TypeScript
+declare global {
+    interface Window {
+        mermaid?: any;
+    }
+}
 
 interface DeckEditorProps {
     deck: Deck;
     setDeck: (deck: Deck | null) => void;
 }
+
+// Custom hook for debouncing
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
+
 
 const Toast: React.FC<{ message: string; show: boolean; }> = ({ message, show }) => {
     if (!show) return null;
@@ -48,118 +73,124 @@ const SuggestionBox: React.FC<{
     );
 };
 
-const AICopilot: React.FC<{
-    deckId: string;
-    onCommandSuccess: () => void;
-    onBeforeCommand: () => Promise<void>;
-}> = ({ deckId, onCommandSuccess, onBeforeCommand }) => {
-    const [command, setCommand] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+const MermaidDiagramModal: React.FC<{ isOpen: boolean; onClose: () => void; diagramCode: string; isLoading: boolean }> = ({ isOpen, onClose, diagramCode, isLoading }) => {
+    const diagramContainerRef = React.useRef<HTMLDivElement>(null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!command.trim() || isLoading) return;
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // CRITICAL FIX: Save any local unsaved changes before executing the command to prevent data loss.
-            await onBeforeCommand(); 
-            await invokeEditorAgent(deckId, command);
-            onCommandSuccess();
-            setCommand('');
-        } catch (err) {
-            console.error(err);
-            setError("Sorry, I couldn't complete that command. Please try again.");
-        } finally {
-            setIsLoading(false);
+    useEffect(() => {
+        if (isOpen && !isLoading && diagramCode && diagramContainerRef.current && window.mermaid) {
+            diagramContainerRef.current.innerHTML = ''; // Clear previous diagram
+            try {
+                window.mermaid.render('mermaid-graph', diagramCode, (svgCode: string) => {
+                    if (diagramContainerRef.current) {
+                       diagramContainerRef.current.innerHTML = svgCode;
+                    }
+                });
+            } catch (e) {
+                console.error("Mermaid rendering error:", e);
+                if (diagramContainerRef.current) {
+                    diagramContainerRef.current.innerText = "Error rendering diagram. Please check the code.";
+                }
+            }
         }
+    }, [isOpen, isLoading, diagramCode]);
+    
+    if (!isOpen) return null;
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(diagramCode);
+        // You could add a toast notification here for feedback
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-xl font-bold text-amo-dark mb-4 flex items-center gap-2">
-                <SparklesIcon className="w-6 h-6 text-amo-orange" />
-                AI Copilot
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-                Edit your deck with natural language. Try: "Add a new slide about our team" or "Change the title of this slide to 'Our Vision'".
-            </p>
-            <form onSubmit={handleSubmit}>
-                <div className="relative">
-                    <input
-                        type="text"
-                        value={command}
-                        onChange={(e) => setCommand(e.target.value)}
-                        placeholder="Tell me what to do..."
-                        disabled={isLoading}
-                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amo-orange"
-                    />
-                    <button
-                        type="submit"
-                        disabled={isLoading || !command.trim()}
-                        aria-label={isLoading ? "Processing command" : "Submit command"}
-                        className="absolute top-1/2 right-2 -translate-y-1/2 p-2 rounded-full bg-amo-dark hover:bg-black text-white disabled:bg-gray-400 transition-colors"
-                    >
-                        {isLoading ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <PaperAirplaneIcon className="w-5 h-5" />}
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold text-amo-dark">Workflow Diagram</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><XMarkIcon className="w-6 h-6" /></button>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[300px] flex items-center justify-center overflow-auto">
+                    {isLoading ? (
+                        <div className="text-center">
+                            <LoaderIcon className="w-10 h-10 text-amo-orange animate-spin mx-auto" />
+                            <p className="mt-2 text-gray-600 font-semibold">Generating diagram...</p>
+                        </div>
+                    ) : (
+                        <div ref={diagramContainerRef} className="w-full"></div>
+                    )}
+                </div>
+                <div className="mt-4 flex gap-4">
+                    <button onClick={copyToClipboard} disabled={isLoading || !diagramCode} className="flex-1 bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 disabled:opacity-50">
+                        <ClipboardDocumentListIcon className="w-5 h-5" /> Copy Code
+                    </button>
+                    <button onClick={onClose} className="flex-1 bg-amo-dark text-white font-bold py-2 px-4 rounded-lg hover:bg-black">
+                        Close
                     </button>
                 </div>
-                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-            </form>
+            </div>
         </div>
     );
 };
 
-
 const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
     const [localDeck, setLocalDeck] = useState<Deck>(deck);
     const [activeSlide, setActiveSlide] = useState(0);
+    const [activeTab, setActiveTab] = useState<EditorTab>('Edit');
     const [showSaveToast, setShowSaveToast] = useState(false);
     const [suggestions, setSuggestions] = useState<Record<number, { title?: string; content?: string }>>({});
-    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
     const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
+    const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisError, setAnalysisError] = useState<string | null>(null);
+    const [researchResult, setResearchResult] = useState<ResearchResult | null>(null);
+    const [refinePrompt, setRefinePrompt] = useState('');
+    const [isRefiningImage, setIsRefiningImage] = useState(false);
+    const [workflowDiagram, setWorkflowDiagram] = useState('');
+    const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false);
+    const [showDiagramModal, setShowDiagramModal] = useState(false);
     const navigate = useNavigate();
+    
+    const currentSlide = localDeck.slides[activeSlide];
+    const debouncedSlideContent = useDebounce(currentSlide, 500); // Debounce slide content for suggestions
 
     // Sync local state if the incoming deck prop changes
     useEffect(() => {
         setLocalDeck(deck);
     }, [deck]);
     
-    // Generate all suggestions on deck load
+    // Generate suggestions for the active slide when its content changes (debounced)
     useEffect(() => {
-        const generateAllSuggestions = async () => {
-            if (!localDeck || !localDeck.slides) return;
+        const generateSingleSuggestion = async () => {
+            if (!debouncedSlideContent) return;
             setIsLoadingSuggestions(true);
-            const allSuggestions: Record<number, { title?: string; content?: string }> = {};
-
-            const suggestionPromises = localDeck.slides.map(async (slide, index) => {
-                const suggestion = await generateSlideSuggestions(slide);
+            try {
+                const suggestion = await generateSlideSuggestions(debouncedSlideContent);
                 if (suggestion) {
                     const slideSuggestions: { title?: string; content?: string } = {};
-                    const originalContentStr = slide.content.join('\n');
+                    const originalContentStr = debouncedSlideContent.content.join('\n');
                     
-                    if (suggestion.suggested_title && suggestion.suggested_title.trim().toLowerCase() !== slide.title.trim().toLowerCase()) {
+                    if (suggestion.suggested_title && suggestion.suggested_title.trim().toLowerCase() !== debouncedSlideContent.title.trim().toLowerCase()) {
                         slideSuggestions.title = suggestion.suggested_title.trim();
                     }
                     if (suggestion.suggested_content && suggestion.suggested_content.trim().toLowerCase() !== originalContentStr.trim().toLowerCase()) {
                         slideSuggestions.content = suggestion.suggested_content.trim();
                     }
                     
-                    if (Object.keys(slideSuggestions).length > 0) {
-                        allSuggestions[index] = slideSuggestions;
-                    }
+                    setSuggestions(prev => ({
+                        ...prev,
+                        [activeSlide]: Object.keys(slideSuggestions).length > 0 ? slideSuggestions : {}
+                    }));
                 }
-            });
-
-            await Promise.all(suggestionPromises);
-            setSuggestions(allSuggestions);
-            setIsLoadingSuggestions(false);
+            } catch (error) {
+                console.error(`Could not generate suggestion for slide ${activeSlide}:`, error);
+            } finally {
+                setIsLoadingSuggestions(false);
+            }
         };
 
-        generateAllSuggestions();
-    }, [localDeck.id]); // Re-run if a different deck is loaded
+        generateSingleSuggestion();
+    }, [debouncedSlideContent, activeSlide]);
+
 
     const handleSave = async () => {
         await setDeck({ ...localDeck, lastEdited: Date.now() });
@@ -231,10 +262,37 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         }
     };
 
+    const handleRefineImage = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        const currentImage = localDeck.slides[activeSlide].image;
+        if (!refinePrompt.trim() || !currentImage) return;
+    
+        setIsRefiningImage(true);
+        try {
+            const [header, base64Data] = currentImage.split(',');
+            if (!header || !base64Data) throw new Error("Invalid image data URL format.");
+            
+            const mimeTypeMatch = header.match(/:(.*?);/);
+            if (!mimeTypeMatch || !mimeTypeMatch[1]) throw new Error("Could not determine mime type from image data URL.");
+            const mimeType = mimeTypeMatch[1];
+            
+            const newImageUrl = await refineSlideImage(base64Data, mimeType, refinePrompt);
+            
+            updateSlide(activeSlide, { image: newImageUrl });
+            setRefinePrompt('');
+            await handleSave();
+            
+        } catch (error) {
+            console.error("Error refining image:", error);
+            // Consider showing a user-facing error toast here
+        } finally {
+            setIsRefiningImage(false);
+        }
+    };
+
     const handleGenerateThemeAndVisuals = async () => {
         if (!localDeck.visualThemeDescription) return;
 
-        // FIX: Persist any unsaved local changes before starting the generation process.
         await handleSave();
         setIsGeneratingTheme(true);
         
@@ -271,7 +329,6 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                 lastEdited: Date.now()
             };
 
-            // Save the newly generated theme and images.
             await setDeck(finalDeck);
 
         } catch (error) {
@@ -293,6 +350,37 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         setActiveSlide(newSlides.length - 1);
     };
 
+    const handleAnalyzeDeck = async () => {
+        await handleSave();
+        setIsAnalyzing(true);
+        setAnalysisError(null);
+        setAnalysisResult(null);
+        try {
+            const result = await analyzeDeck(localDeck.id);
+            setAnalysisResult(result);
+        } catch (error) {
+            console.error(error);
+            setAnalysisError(error instanceof Error ? error.message : "An unknown error occurred.");
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const handleGenerateDiagram = async () => {
+        setIsGeneratingDiagram(true);
+        setShowDiagramModal(true);
+        try {
+            const diagramCode = await generateWorkflowDiagram(localDeck.id);
+            setWorkflowDiagram(diagramCode);
+        } catch (error) {
+            console.error("Failed to generate diagram:", error);
+            setWorkflowDiagram("Error: Could not generate diagram.");
+        } finally {
+            setIsGeneratingDiagram(false);
+        }
+    };
+
+
     const refreshDeck = async () => {
         const refreshedDeck = await deckService.getDeckById(deck.id);
         if (refreshedDeck) {
@@ -304,12 +392,18 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         }
     };
 
-    const currentSlide = localDeck.slides[activeSlide];
     const currentSuggestions = suggestions[activeSlide] || {};
 
     return (
         <div className="flex flex-col lg:flex-row h-screen bg-gray-100">
             <Toast message="Deck saved successfully!" show={showSaveToast} />
+            <MermaidDiagramModal 
+                isOpen={showDiagramModal}
+                onClose={() => setShowDiagramModal(false)}
+                diagramCode={workflowDiagram}
+                isLoading={isGeneratingDiagram}
+            />
+
             {/* Sidebar for slide thumbnails */}
             <aside className="w-full lg:w-64 bg-white p-4 flex flex-col overflow-y-auto border-b lg:border-r lg:border-b-0 border-gray-200">
                 <div className="flex justify-between items-center mb-4">
@@ -342,6 +436,11 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
             {/* Main slide editor */}
             <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
                 <div className="flex flex-wrap justify-end items-center gap-2 sm:gap-4 mb-4">
+                     <button 
+                        onClick={handleGenerateDiagram}
+                        className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm sm:text-base">
+                        <DownloadIcon className="w-5 h-5"/> Export Workflow
+                    </button>
                     <button 
                         onClick={() => alert('Share functionality is coming soon!')}
                         className="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm sm:text-base">
@@ -362,7 +461,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                     {/* Slide preview */}
                     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-8 flex flex-col justify-center items-center">
-                         <div className="w-full aspect-video bg-gray-100 rounded-md flex items-center justify-center border border-gray-200 mb-4">
+                         <div className="relative w-full aspect-video bg-gray-100 rounded-md flex items-center justify-center border border-gray-200 mb-4">
                             {currentSlide.imageLoading ? (
                                 <LoaderIcon className="w-8 h-8 text-amo-orange animate-spin" />
                             ) : currentSlide.image ? (
@@ -380,96 +479,125 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
                                     </ul>
                                 </div>
                             )}
+                            {isRefiningImage && (
+                                <div className="absolute inset-0 bg-black/50 rounded-md flex flex-col items-center justify-center text-white">
+                                    <LoaderIcon className="w-8 h-8 animate-spin" />
+                                    <p className="mt-2 font-semibold">Refining image...</p>
+                                </div>
+                            )}
                         </div>
-                        <button onClick={handleGenerateImage} disabled={currentSlide.imageLoading || isGeneratingTheme} className="w-full bg-amo-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700">
+                        <button onClick={handleGenerateImage} disabled={currentSlide.imageLoading || isGeneratingTheme || isRefiningImage} className="w-full bg-amo-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700">
                             {currentSlide.imageLoading ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
                             {currentSlide.imageLoading ? 'Generating...' : currentSlide.image ? 'Regenerate Image' : 'Generate Image with AI'}
                         </button>
+                        {currentSlide.image && !currentSlide.imageLoading && (
+                            <div className="w-full mt-4">
+                                <form onSubmit={handleRefineImage}>
+                                    <label htmlFor="refine-prompt" className="block text-sm font-medium text-gray-700 mb-1">Refine with AI</label>
+                                    <div className="relative flex gap-2">
+                                        <input
+                                            id="refine-prompt"
+                                            type="text"
+                                            value={refinePrompt}
+                                            onChange={(e) => setRefinePrompt(e.target.value)}
+                                            placeholder="e.g., make the background color dark blue"
+                                            disabled={isRefiningImage}
+                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amo-orange"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={isRefiningImage || !refinePrompt.trim()}
+                                            className="bg-amo-dark text-white font-bold p-3 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700"
+                                        >
+                                            {isRefiningImage ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <span>Refine</span>}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
                     </div>
                     
-                    {/* Editing controls */}
+                    {/* Editing controls & Analysis */}
                     <div className="flex flex-col gap-8">
-                         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                            <h3 className="text-xl font-bold text-amo-dark mb-4 flex items-center gap-2">
-                                Edit Content
-                                {isLoadingSuggestions && (
-                                    <span className="text-sm font-normal text-gray-500 flex items-center gap-1">
-                                        <LoaderIcon className="w-4 h-4 animate-spin" />
-                                        Generating suggestions...
-                                    </span>
+                         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-1">
+                            {/* Tab Navigation */}
+                            <div className="flex border-b border-gray-200">
+                                <TabButton icon={DocumentTextIcon} label="Edit" isActive={activeTab === 'Edit'} onClick={() => setActiveTab('Edit')} />
+                                <TabButton icon={PaletteIcon} label="Theme" isActive={activeTab === 'Theme'} onClick={() => setActiveTab('Theme')} />
+                                <TabButton icon={AcademicCapIcon} label="Analysis" isActive={activeTab === 'Analysis'} onClick={() => setActiveTab('Analysis')} />
+                            </div>
+
+                            <div className="p-6">
+                                {activeTab === 'Edit' && (
+                                    <>
+                                        <h3 className="text-xl font-bold text-amo-dark mb-4 flex items-center gap-2">
+                                            Edit Content
+                                            {isLoadingSuggestions && (
+                                                <span className="text-sm font-normal text-gray-500 flex items-center gap-1">
+                                                    <LoaderIcon className="w-4 h-4 animate-spin" />
+                                                    Checking for suggestions...
+                                                </span>
+                                            )}
+                                        </h3>
+                                        <div className="relative mb-4">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label htmlFor="slide-title" className="block text-sm font-medium text-gray-700">Slide Title</label>
+                                                {currentSuggestions.title && (
+                                                    <div className="flex items-center gap-1 text-xs text-amo-orange font-semibold animate-fade-in" title="AI suggestion available">
+                                                        <SparklesIcon className="w-4 h-4" />
+                                                        Suggestion available
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <input id="slide-title" type="text" value={currentSlide.title} onChange={handleTitleChange} className="w-full p-3 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange" />
+                                        </div>
+                                        {currentSuggestions.title && <SuggestionBox suggestion={currentSuggestions.title} onAccept={() => handleAcceptSuggestion('title')} onReject={() => handleRejectSuggestion('title')} />}
+                                        <div className="relative">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label htmlFor="slide-content" className="block text-sm font-medium text-gray-700">Slide Content</label>
+                                                {currentSuggestions.content && (
+                                                    <div className="flex items-center gap-1 text-xs text-amo-orange font-semibold animate-fade-in" title="AI suggestion available">
+                                                        <SparklesIcon className="w-4 h-4" />
+                                                        Suggestion available
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <textarea id="slide-content" value={currentSlide.content.join('\n')} onChange={handleContentChange} className="w-full h-40 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange" placeholder="Enter each bullet point on a new line." />
+                                        </div>
+                                        {currentSuggestions.content && <SuggestionBox suggestion={currentSuggestions.content} onAccept={() => handleAcceptSuggestion('content')} onReject={() => handleRejectSuggestion('content')} />}
+                                    </>
                                 )}
-                            </h3>
-                            
-                            <div className="relative mb-4">
-                                <div className="flex justify-between items-center mb-1">
-                                    <label htmlFor="slide-title" className="block text-sm font-medium text-gray-700">Slide Title</label>
-                                    {currentSuggestions.title && (
-                                        <div className="flex items-center gap-1 text-xs text-amo-orange font-semibold animate-fade-in" title="AI suggestion available">
-                                            <SparklesIcon className="w-4 h-4" />
-                                            Suggestion available
-                                        </div>
-                                    )}
-                                </div>
-                                <input
-                                    id="slide-title"
-                                    type="text"
-                                    value={currentSlide.title}
-                                    onChange={handleTitleChange}
-                                    className="w-full p-3 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
-                                />
-                            </div>
-                            
-                            {currentSuggestions.title && (
-                                <SuggestionBox suggestion={currentSuggestions.title} onAccept={() => handleAcceptSuggestion('title')} onReject={() => handleRejectSuggestion('title')} />
-                            )}
 
-                            <div className="relative">
-                                <div className="flex justify-between items-center mb-1">
-                                    <label htmlFor="slide-content" className="block text-sm font-medium text-gray-700">Slide Content</label>
-                                    {currentSuggestions.content && (
-                                        <div className="flex items-center gap-1 text-xs text-amo-orange font-semibold animate-fade-in" title="AI suggestion available">
-                                            <SparklesIcon className="w-4 h-4" />
-                                            Suggestion available
-                                        </div>
-                                    )}
-                                </div>
-                                <textarea
-                                    id="slide-content"
-                                    value={currentSlide.content.join('\n')}
-                                    onChange={handleContentChange}
-                                    className="w-full h-40 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
-                                    placeholder="Enter each bullet point on a new line."
-                                />
+                                {activeTab === 'Theme' && (
+                                    <>
+                                        <h3 className="text-xl font-bold text-amo-dark mb-4">Visual Theme</h3>
+                                        <label htmlFor="theme-description" className="block text-sm font-medium text-gray-700 mb-1">Describe the visual style for your deck</label>
+                                        <textarea id="theme-description" value={localDeck.visualThemeDescription || ''} onChange={handleThemeDescriptionChange} className="w-full h-24 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange" placeholder="e.g., A clean, minimalist style for a healthcare startup, using a light blue accent color." />
+                                        <button onClick={handleGenerateThemeAndVisuals} disabled={isGeneratingTheme || !localDeck.visualThemeDescription} className="mt-4 w-full bg-amo-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black flex items-center justify-center gap-2 disabled:bg-gray-700">
+                                            {isGeneratingTheme ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+                                            {isGeneratingTheme ? 'Generating Theme & Visuals...' : 'Generate Theme & All Visuals'}
+                                        </button>
+                                    </>
+                                )}
+
+                                {activeTab === 'Analysis' && (
+                                    <AnalysisPanel result={analysisResult} isLoading={isAnalyzing} error={analysisError} onAnalyze={handleAnalyzeDeck} />
+                                )}
                             </div>
-                            
-                            {currentSuggestions.content && (
-                                <SuggestionBox suggestion={currentSuggestions.content} onAccept={() => handleAcceptSuggestion('content')} onReject={() => handleRejectSuggestion('content')} />
-                            )}
                         </div>
 
-                         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                            <h3 className="text-xl font-bold text-amo-dark mb-4 flex items-center gap-2">
-                                <PaletteIcon className="w-6 h-6 text-amo-orange" />
-                                Visual Theme
-                            </h3>
-                            <label htmlFor="theme-description" className="block text-sm font-medium text-gray-700 mb-1">Describe the visual style for your deck</label>
-                            <textarea
-                                id="theme-description"
-                                value={localDeck.visualThemeDescription || ''}
-                                onChange={handleThemeDescriptionChange}
-                                className="w-full h-24 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-amo-orange focus:border-transparent transition"
-                                placeholder="e.g., A clean, minimalist style for a healthcare startup, using a light blue accent color."
+                        {researchResult && (
+                            <ResearchResultPanel 
+                                result={researchResult} 
+                                onClose={() => setResearchResult(null)}
                             />
-                             <button onClick={handleGenerateThemeAndVisuals} disabled={isGeneratingTheme || !localDeck.visualThemeDescription} className="mt-4 w-full bg-amo-dark text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-black transition-all flex items-center justify-center gap-2 disabled:bg-gray-700">
-                                {isGeneratingTheme ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
-                                {isGeneratingTheme ? 'Generating Theme & Visuals...' : 'Generate Theme & All Visuals'}
-                            </button>
-                        </div>
+                        )}
 
                         <AICopilot 
                             deckId={localDeck.id} 
                             onCommandSuccess={refreshDeck}
                             onBeforeCommand={handleSave}
+                            onResearchComplete={(result) => setResearchResult(result)}
                         />
                     </div>
                 </div>
@@ -477,5 +605,21 @@ const DeckEditor: React.FC<DeckEditorProps> = ({ deck, setDeck }) => {
         </div>
     );
 };
+
+// --- Sub-components for DeckEditor ---
+
+type EditorTab = 'Edit' | 'Theme' | 'Analysis';
+
+const TabButton: React.FC<{ icon: React.FC<any>, label: string, isActive: boolean, onClick: () => void }> = ({ icon: Icon, label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`flex-1 flex items-center justify-center gap-2 p-4 text-sm font-semibold border-b-2 transition-colors ${
+            isActive ? 'border-amo-orange text-amo-orange' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+        }`}
+    >
+        <Icon className="w-5 h-5" />
+        {label}
+    </button>
+);
 
 export default DeckEditor;

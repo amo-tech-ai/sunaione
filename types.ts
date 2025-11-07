@@ -150,3 +150,32 @@ export interface UserProfile {
   skills: Skill[];
   experience: Experience[];
 }
+
+// Types for Strategic Analysis feature
+export type InsightCategory = 'Strength' | 'Weakness' | 'Suggestion';
+
+export interface Insight {
+    category: InsightCategory;
+    slide_number: number;
+    slide_title: string;
+    feedback: string;
+}
+
+export interface AnalysisResult {
+    pitch_readiness_score: number;
+    executive_summary: string;
+    key_insights: Insight[];
+}
+
+// Types for Market Research Agent
+export interface GroundingChunk {
+    web?: {
+        uri: string;
+        title: string;
+    };
+}
+
+export interface ResearchResult {
+    answer: string;
+    sources: GroundingChunk[];
+}
